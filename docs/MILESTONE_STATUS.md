@@ -27,10 +27,10 @@ No application/service implementation has started yet.
 
 ## Learning / Architecture Work Completed So Far
 
-- 0.1 — engineering problem / architecture pressures;
-- 0.2 — monolith fundamentals;
-- 0.3 — modular monolith fundamentals;
-- 0.4 — microservice fundamentals;
+- 0.1 — Engineering problem / architecture pressures;
+- 0.2 — Monolith;
+- 0.3 — Modular monolith;
+- 0.4 — Microservices;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -60,7 +60,7 @@ Continue the established Milestone 0 lesson sequence exactly:
 - 0.20 — Mandatory Milestone 0 assignment;
 - 0.21 — Milestone 0 completion gate.
 
-Sections 0.5 and 0.6 have been partially introduced during 0.1–0.4, but they have not been formally closed as standalone sections and must still be reviewed in sequence.
+Sections 0.5 and 0.6 have been partially introduced during 0.1–0.4, but they have not been formally completed as standalone sections and must still be reviewed in sequence.
 
 ## Relevant Files / Components
 
@@ -94,7 +94,17 @@ Learner correctly reasoned that:
 - [ ] Assignment completed and graded.
 - [ ] Architecture/documentation updated as required.
 
+## Session Checkpoint
+
+**Session ended after completing section 0.4 — Microservices.**
+
+No implementation work was performed, and Milestone 0 remains in progress.
+
+The next conversation must resume at **0.5 — Monolith vs modular monolith vs microservices**. Do not restart 0.1–0.4 and do not skip ahead to bounded contexts before formally completing 0.5 and 0.6.
+
 ## Next Engineering Step
+
+No code/infrastructure action yet.
 
 After sections 0.5–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
