@@ -71,11 +71,23 @@ No active assignment yet.
 
 No deferred topics recorded yet.
 
+## Session Checkpoint
+
+The session ended immediately after section **0.4 — Microservices** and its understanding check.
+
+The learner demonstrated the core distinction between independently deployed services and internal modules, and correctly identified both shared-data coupling and synchronous request-chain coupling.
+
 ## Next Teaching Step
 
-Resume with the established sequence at **0.5 — Monolith vs modular monolith vs microservices**, then **0.6 — Why microservices are difficult**, before moving to **0.7 — Business capabilities and bounded contexts**.
+Resume exactly at **0.5 — Monolith vs modular monolith vs microservices**.
 
-Do not skip or renumber the previously established Milestone 0 subsections.
+Then continue in this order:
+
+1. 0.5 — consolidate the three architecture styles and their tradeoffs;
+2. 0.6 — formally cover why microservices are difficult;
+3. 0.7 — Business capabilities and bounded contexts.
+
+Do not restart sections 0.1–0.4. Do not skip or renumber the established Milestone 0 subsections.
 
 ## Session Update Rule
 
