@@ -30,8 +30,10 @@
 
 ## Partially Understands
 
-- broader service-boundary selection criteria still need to be developed through bounded-context exercises;
-- sync-vs-async communication decisions have only been introduced conceptually, not yet practiced systematically.
+- comparison/tradeoff reasoning across monolith, modular monolith, and microservices has been introduced but should be consolidated in section 0.5;
+- microservice difficulty/failure modes have been introduced but should be consolidated in section 0.6;
+- broader service-boundary selection criteria still need bounded-context exercises;
+- sync-vs-async decisions have only been introduced conceptually.
 
 ## Needs Reinforcement
 
@@ -71,13 +73,9 @@ No deferred topics recorded yet.
 
 ## Next Teaching Step
 
-Continue Milestone 0 with **bounded contexts and service/data ownership**:
+Resume with the established sequence at **0.5 — Monolith vs modular monolith vs microservices**, then **0.6 — Why microservices are difficult**, before moving to **0.7 — Business capabilities and bounded contexts**.
 
-1. define domain, business capability, and bounded context from the ground up;
-2. distinguish a business boundary from a table/folder/technical-layer split;
-3. apply bounded-context reasoning to Auth, Users, Courses, Enrollment, Payments, Notifications, Files, Search, Chat, RAG, and Assessment;
-4. then move into database-per-service/source-of-truth reasoning;
-5. then teach and practice synchronous vs asynchronous communication choices.
+Do not skip or renumber the previously established Milestone 0 subsections.
 
 ## Session Update Rule
 
