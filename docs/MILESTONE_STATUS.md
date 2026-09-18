@@ -27,10 +27,10 @@ No application/service implementation has started yet.
 
 ## Learning / Architecture Work Completed So Far
 
-- engineering pressures that drive architecture decisions;
-- monolith fundamentals;
-- modular monolith fundamentals;
-- microservice fundamentals;
+- 0.1 — engineering problem / architecture pressures;
+- 0.2 — monolith fundamentals;
+- 0.3 — modular monolith fundamentals;
+- 0.4 — microservice fundamentals;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -40,19 +40,27 @@ No application/service implementation has started yet.
 
 ## Still Pending
 
-Milestone 0 still needs:
+Continue the established Milestone 0 lesson sequence exactly:
 
-- bounded contexts;
-- business-capability boundary reasoning;
-- service responsibility mapping for the Collaborative Learning Platform;
-- database-per-service and data ownership in more depth;
-- synchronous vs asynchronous communication;
-- first system architecture diagram;
-- service responsibility map;
-- first ADRs where a durable decision is actually made;
-- Milestone 0 checkpoint;
-- Milestone 0 assignment and grading;
-- Milestone 0 completion-gate review.
+- 0.5 — Monolith vs modular monolith vs microservices;
+- 0.6 — Why microservices are difficult;
+- 0.7 — Business capabilities and bounded contexts;
+- 0.8 — Service responsibility mapping;
+- 0.9 — Data ownership and database-per-service;
+- 0.10 — Service contracts;
+- 0.11 — Synchronous communication;
+- 0.12 — Asynchronous communication;
+- 0.13 — Sync vs async decision-making;
+- 0.14 — First Collaborative Learning Platform HLD;
+- 0.15 — Service responsibility map;
+- 0.16 — First Architecture Decision Records;
+- 0.17 — Failure and operational thinking;
+- 0.18 — Architecture review;
+- 0.19 — Checkpoint;
+- 0.20 — Mandatory Milestone 0 assignment;
+- 0.21 — Milestone 0 completion gate.
+
+Sections 0.5 and 0.6 have been partially introduced during 0.1–0.4, but they have not been formally closed as standalone sections and must still be reviewed in sequence.
 
 ## Relevant Files / Components
 
@@ -88,7 +96,7 @@ Learner correctly reasoned that:
 
 ## Next Engineering Step
 
-After bounded contexts, service/data ownership, and sync-vs-async communication are taught, draft the **first system architecture diagram and service responsibility map**. Do not start application coding before the Milestone 0 assignment has been evaluated.
+After sections 0.5–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
