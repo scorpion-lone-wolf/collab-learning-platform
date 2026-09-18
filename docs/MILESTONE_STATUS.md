@@ -15,7 +15,7 @@
 
 **Milestone 0 — Architecture Orientation and System HLD**
 
-**Status:** NOT STARTED
+**Status:** IN PROGRESS
 
 ## Completed Milestones
 
@@ -23,54 +23,72 @@ None.
 
 ## Implemented
 
-No project implementation has been recorded yet.
+No application/service implementation has started yet.
+
+## Learning / Architecture Work Completed So Far
+
+- engineering pressures that drive architecture decisions;
+- monolith fundamentals;
+- modular monolith fundamentals;
+- microservice fundamentals;
+- module boundary vs runtime/deployment boundary;
+- ownership and coupling basics;
+- failure propagation / blast-radius basics;
+- why shared data access weakens service independence;
+- why long synchronous dependency chains create request coupling;
+- distributed-monolith warning signs.
 
 ## Still Pending
 
-Milestone 0 must cover and produce the required architecture understanding/artifacts, including:
+Milestone 0 still needs:
 
-- monolith vs modular monolith vs microservices;
-- why microservices are difficult and when they are not the right starting point;
 - bounded contexts;
-- service ownership and responsibility mapping;
-- database-per-service and data ownership;
+- business-capability boundary reasoning;
+- service responsibility mapping for the Collaborative Learning Platform;
+- database-per-service and data ownership in more depth;
 - synchronous vs asynchronous communication;
 - first system architecture diagram;
 - service responsibility map;
-- first architecture decision records where an actual durable decision is made;
+- first ADRs where a durable decision is actually made;
 - Milestone 0 checkpoint;
 - Milestone 0 assignment and grading;
 - Milestone 0 completion-gate review.
 
 ## Relevant Files / Components
 
-- `docs/MASTER_CURRICULUM.md` — curriculum, milestone order, architecture, and teaching rules.
-- `docs/MILESTONE_STATUS.md` — engineering progress and next engineering step.
-- `docs/LEARNING_STATE.md` — demonstrated understanding and next teaching step.
-- `docs/DECISIONS.md` — durable architecture decisions and their history.
+- `docs/MASTER_CURRICULUM.md`
+- `docs/MILESTONE_STATUS.md`
+- `docs/LEARNING_STATE.md`
+- `docs/DECISIONS.md`
 
 No application/service implementation files are active yet.
 
 ## Verification Already Performed
 
-None. The project is still in the initial bootstrap state.
+Learner correctly reasoned that:
+
+- one deployable NestJS application with multiple modules is still one monolith;
+- Enrollment should own enrollment-state changes rather than Payment mutating Enrollment data directly;
+- shared database access creates data-ownership coupling;
+- a required Auth -> Course -> Payment request chain creates request/runtime coupling;
+- a non-critical notification failure should not automatically invalidate a successful enrollment.
 
 ## Current Milestone Completion Gate
 
-- [ ] Problem and motivation explained.
-- [ ] Mental model / first system view explained.
-- [ ] Tradeoffs discussed.
-- [ ] High-level architecture responsibilities and boundaries defined.
+- [x] Problem and motivation introduced.
+- [x] Initial monolith / modular-monolith / microservice mental models explained.
+- [x] Initial tradeoffs discussed.
+- [ ] High-level architecture responsibilities and boundaries fully defined.
 - [ ] Required Milestone 0 artifacts produced.
-- [ ] Important failure/operational implications discussed where relevant.
-- [ ] Common mistakes and production best practices reviewed.
+- [ ] Important failure/operational implications fully reviewed.
+- [ ] Common mistakes and production best practices fully reviewed.
 - [ ] Checkpoint completed.
 - [ ] Assignment completed and graded.
 - [ ] Architecture/documentation updated as required.
 
 ## Next Engineering Step
 
-After the Milestone 0 problem/mental-model teaching, draft the **first system architecture diagram and service responsibility map**. Do not start application coding before the service boundaries and ownership model are understood and the Milestone 0 assignment has been evaluated.
+After bounded contexts, service/data ownership, and sync-vs-async communication are taught, draft the **first system architecture diagram and service responsibility map**. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
