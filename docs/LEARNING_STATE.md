@@ -15,35 +15,51 @@
 
 **Milestone 0 — Architecture Orientation and System HLD**
 
-**Learning status:** NOT ASSESSED YET
+**Learning status:** IN PROGRESS
 
 ## Understands
 
-Not assessed yet.
+- a monolith can contain multiple clean internal modules and still be one deployment/runtime unit;
+- a modular monolith uses explicit internal ownership/boundaries without becoming multiple services;
+- a microservice boundary is stronger than a module boundary because it introduces an independent runtime/deployment boundary;
+- business data should be modified by the capability/module/service that owns it;
+- Payment directly mutating Enrollment data is tight data-ownership coupling;
+- a long required service call chain such as Auth -> Course -> Payment creates request/runtime coupling;
+- tightly coupled failures can increase blast radius;
+- a successful core business operation should not necessarily fail because a non-critical notification dependency fails.
 
 ## Partially Understands
 
-None recorded yet.
+- broader service-boundary selection criteria still need to be developed through bounded-context exercises;
+- sync-vs-async communication decisions have only been introduced conceptually, not yet practiced systematically.
 
 ## Needs Reinforcement
 
-Not assessed yet.
+- bounded contexts;
+- source-of-truth/data ownership across independently deployed services;
+- choosing service boundaries from business capabilities rather than tables or technical layers;
+- synchronous vs asynchronous communication tradeoffs.
 
 ## Misconceptions / Weak Areas
 
-None observed yet.
+None currently recorded as unresolved.
 
 ## Resolved Misconceptions
 
-None recorded yet.
+- clarified that a monolith does not automatically mean one failure always breaks every capability;
+- clarified that microservices do not automatically guarantee failure isolation.
 
 ## Completed Understanding Checks
 
-None.
+- identified one NestJS application with multiple modules as a monolith;
+- identified Enrollment as the owner of enrollment-state changes;
+- explained why Payment directly changing Enrollment data creates tight coupling;
+- identified shared-database coupling and request-chain coupling in a nominal microservice setup;
+- chose to preserve enrollment success when notification delivery fails and justified the business reason.
 
 ## Assignment History
 
-No milestone assignments have been submitted or graded yet.
+No milestone assignment has been submitted or graded yet.
 
 ## Current Assignment Status
 
@@ -53,18 +69,15 @@ No active assignment yet.
 
 No deferred topics recorded yet.
 
-Use this section only for important topics that appear before their proper milestone. Keep each entry concise and identify where it should be revisited.
-
 ## Next Teaching Step
 
-Begin Milestone 0 with the **engineering problem and system-level mental model**:
+Continue Milestone 0 with **bounded contexts and service/data ownership**:
 
-1. explain why a growing collaborative learning platform creates pressure around ownership, deployment, scaling, and failure isolation;
-2. compare a monolith, modular monolith, and microservices without assuming microservices are automatically better;
-3. explain bounded contexts and service/data ownership from the ground up;
-4. only then begin deciding the platform's initial service boundaries and communication styles.
-
-Do not start implementation code before these foundations are clear enough to attempt the Milestone 0 checkpoint/assignment.
+1. define domain, business capability, and bounded context from the ground up;
+2. distinguish a business boundary from a table/folder/technical-layer split;
+3. apply bounded-context reasoning to Auth, Users, Courses, Enrollment, Payments, Notifications, Files, Search, Chat, RAG, and Assessment;
+4. then move into database-per-service/source-of-truth reasoning;
+5. then teach and practice synchronous vs asynchronous communication choices.
 
 ## Session Update Rule
 
