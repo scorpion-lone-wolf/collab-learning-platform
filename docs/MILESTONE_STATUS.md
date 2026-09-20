@@ -31,20 +31,23 @@ No application/service implementation has started yet.
 - 0.2 — Monolith;
 - 0.3 — Modular monolith;
 - 0.4 — Microservices;
+- 0.5 — Monolith vs modular monolith vs microservices;
+- 0.6 — Why microservices are difficult;
+- 0.7 — Business capabilities and bounded contexts;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
 - why shared data access weakens service independence;
 - why long synchronous dependency chains create request coupling;
-- distributed-monolith warning signs.
+- distributed-monolith warning signs;
+- business-capability decomposition rather than table/technical-layer decomposition;
+- bounded-context reasoning using responsibility, source of truth, business rules, cohesion, and reasons to change;
+- distinction between Course, Payment, Enrollment, Auth/Profile, and Learning Progress ownership.
 
 ## Still Pending
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.5 — Monolith vs modular monolith vs microservices;
-- 0.6 — Why microservices are difficult;
-- 0.7 — Business capabilities and bounded contexts;
 - 0.8 — Service responsibility mapping;
 - 0.9 — Data ownership and database-per-service;
 - 0.10 — Service contracts;
@@ -59,8 +62,6 @@ Continue the established Milestone 0 lesson sequence exactly:
 - 0.19 — Checkpoint;
 - 0.20 — Mandatory Milestone 0 assignment;
 - 0.21 — Milestone 0 completion gate.
-
-Sections 0.5 and 0.6 have been partially introduced during 0.1–0.4, but they have not been formally completed as standalone sections and must still be reviewed in sequence.
 
 ## Relevant Files / Components
 
@@ -79,7 +80,12 @@ Learner correctly reasoned that:
 - Enrollment should own enrollment-state changes rather than Payment mutating Enrollment data directly;
 - shared database access creates data-ownership coupling;
 - a required Auth -> Course -> Payment request chain creates request/runtime coupling;
-- a non-critical notification failure should not automatically invalidate a successful enrollment.
+- a non-critical notification failure should not automatically invalidate a successful enrollment;
+- a timeout does not prove that a remote payment failed;
+- blindly retrying an ambiguous payment outcome can duplicate a charge;
+- Course Management and Payment are separate bounded contexts even when they participate in one purchase workflow;
+- Auth/Profile, Enrollment/Learning Progress, and Course/Payment responsibilities can reference the same real-world user/course while owning different business truths;
+- Course owns course configuration/publishing truth, Payment owns financial transaction/refund truth, and Enrollment owns access-entitlement truth.
 
 ## Current Milestone Completion Gate
 
@@ -94,19 +100,19 @@ Learner correctly reasoned that:
 - [ ] Assignment completed and graded.
 - [ ] Architecture/documentation updated as required.
 
-## Session Checkpoint
+## Current Checkpoint
 
-**Session ended after completing section 0.4 — Microservices.**
+Sections **0.1 through 0.7 are complete**.
 
-No implementation work was performed, and Milestone 0 remains in progress.
+No implementation work has been performed, and Milestone 0 remains in progress.
 
-The next conversation must resume at **0.5 — Monolith vs modular monolith vs microservices**. Do not restart 0.1–0.4 and do not skip ahead to bounded contexts before formally completing 0.5 and 0.6.
+Resume at **0.8 — Service responsibility mapping**. Do not restart 0.1–0.7 and do not skip ahead to data ownership before completing the responsibility map reasoning.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-After sections 0.5–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+After sections 0.8–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
