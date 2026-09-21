@@ -35,6 +35,7 @@ No application/service implementation has started yet.
 - 0.6 — Why microservices are difficult;
 - 0.7 — Business capabilities and bounded contexts;
 - 0.8 — Service responsibility mapping;
+- 0.8 — Service responsibility mapping;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
