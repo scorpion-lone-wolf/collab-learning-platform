@@ -100,6 +100,25 @@ Sections **0.1 through 0.8 are complete as curriculum sections**.
 
 The learner has correctly solved several bounded-context and responsibility-mapping exercises, but has explicitly said they are **not yet confident doing this independently**. Do not infer mastery from section completion. Continue deliberate practice before 0.9.
 
+## Teaching Approach Requirement
+
+For all future teaching in this project, especially architecture/design topics, do not jump directly to conclusions such as "this is the bounded context" or "this service owns this responsibility."
+
+Show the reasoning path explicitly and step by step:
+
+1. start from the raw requirement/problem;
+2. identify the relevant actors and actions;
+3. ask what business question is actually being answered;
+4. identify the rules and data involved;
+5. determine what must stay consistent together;
+6. identify the authoritative owner/source of truth;
+7. compare plausible alternative groupings;
+8. explain why one boundary is better and why the others are weaker;
+9. only then name the context/module/service boundary;
+10. apply the same reasoning method to new domains so the learner can reproduce the process independently.
+
+This requirement applies across the curriculum, not only to bounded contexts. The learner's goal is to understand and reproduce the design thought process, not memorize final answers.
+
 ## Next Teaching Step
 
 Run a **bounded-context and service-boundary reinforcement block before 0.9**.
