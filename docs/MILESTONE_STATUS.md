@@ -34,6 +34,7 @@ No application/service implementation has started yet.
 - 0.5 — Monolith vs modular monolith vs microservices;
 - 0.6 — Why microservices are difficult;
 - 0.7 — Business capabilities and bounded contexts;
+- 0.8 — Service responsibility mapping;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -48,7 +49,7 @@ No application/service implementation has started yet.
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.8 — Service responsibility mapping;
+- Reinforcement block before 0.9 — cross-domain practice for discovering bounded contexts, defining responsibility, identifying source of truth, and mapping service boundaries. This is learner-requested reinforcement after completing 0.8 and must happen before starting 0.9;
 - 0.9 — Data ownership and database-per-service;
 - 0.10 — Service contracts;
 - 0.11 — Synchronous communication;
@@ -102,17 +103,21 @@ Learner correctly reasoned that:
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.7 are complete**.
+Sections **0.1 through 0.8 are complete as curriculum sections**.
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
-Resume at **0.8 — Service responsibility mapping**. Do not restart 0.1–0.7 and do not skip ahead to data ownership before completing the responsibility map reasoning.
+The learner explicitly requested **additional reinforcement before 0.9** because they are not yet confident independently discovering bounded contexts, articulating the business question a context answers, identifying source-of-truth ownership, and mapping responsibilities/services without relying on memorized platform examples.
+
+Resume with a **cross-domain reinforcement block** using unfamiliar domains. Do not start 0.9 automatically.
+
+After the reinforcement block demonstrates stronger independent reasoning, explicitly ask the learner whether they want to start **0.9 — Data ownership and database-per-service**. If a new conversation begins before that decision, the mentor should resume reinforcement first and then ask whether to start 0.9.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-After sections 0.8–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+After the reinforcement block and sections 0.9–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
