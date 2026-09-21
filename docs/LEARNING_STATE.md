@@ -40,13 +40,21 @@
 
 ## Partially Understands
 
-- service responsibility mapping across the full Collaborative Learning Platform has not yet been practiced systematically;
+- independently discovering bounded contexts from an unfamiliar domain without relying on memorized examples;
+- articulating the precise business question a context answers;
+- explaining why one responsibility belongs inside a context and another does not;
+- turning bounded-context reasoning into a service responsibility map across a whole domain;
 - source-of-truth/data ownership across independently deployed services needs deeper practice;
 - sync-vs-async decisions have only been introduced conceptually.
 
 ## Needs Reinforcement
 
-- turning individual bounded-context decisions into a complete service responsibility map;
+- repeated cross-domain bounded-context discovery using unfamiliar domains;
+- identifying business capability vs entity/table vs workflow;
+- defining one-sentence responsibility statements;
+- identifying authoritative source-of-truth ownership;
+- using business rules, language, cohesion, and reasons-to-change to justify boundaries;
+- deciding whether a boundary is only a logical/module boundary or may justify a separate service boundary;
 - database-per-service/data ownership implications;
 - synchronous vs asynchronous communication tradeoffs.
 
@@ -80,7 +88,7 @@ No milestone assignment has been submitted or graded yet.
 
 ## Current Assignment Status
 
-No active milestone assignment yet.
+No active milestone assignment yet. The current work is a learner-requested reinforcement block, not the Milestone 0 graded assignment.
 
 ## Parking Lot
 
@@ -88,17 +96,30 @@ No deferred topics recorded yet.
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.7 are complete**.
+Sections **0.1 through 0.8 are complete as curriculum sections**.
 
-The learner can now identify and justify bounded contexts using responsibility, source-of-truth ownership, business rules, cohesion, and independent reasons to change.
+The learner has correctly solved several bounded-context and responsibility-mapping exercises, but has explicitly said they are **not yet confident doing this independently**. Do not infer mastery from section completion. Continue deliberate practice before 0.9.
 
 ## Next Teaching Step
 
-Resume exactly at **0.8 — Service responsibility mapping**.
+Run a **bounded-context and service-boundary reinforcement block before 0.9**.
 
-Use the bounded-context reasoning already demonstrated to map responsibilities across the Collaborative Learning Platform before moving to 0.9 data ownership/database-per-service.
+Use unfamiliar domains (not the Collaborative Learning Platform) so the learner cannot rely on memorized answers. Practice this sequence repeatedly:
 
-Do not restart sections 0.1–0.7. Do not skip or renumber the established Milestone 0 subsections.
+1. identify candidate business capabilities;
+2. state the business question each candidate context answers;
+3. identify the authoritative data/source of truth;
+4. identify business rules that belong together;
+5. identify different reasons to change;
+6. distinguish shared nouns from shared responsibility;
+7. map responsibilities into bounded contexts;
+8. only then discuss whether each context should remain a module or become a separately deployable service.
+
+Do not start **0.9 — Data ownership and database-per-service** automatically.
+
+After the learner demonstrates stronger independent reasoning, explicitly ask: **"0.9 — Data ownership and database-per-service is next. Do you want to start it now, or continue boundary practice?"**
+
+If a new conversation begins before that choice is made, resume this reinforcement block first and then ask that question.
 
 ## Session Update Rule
 
