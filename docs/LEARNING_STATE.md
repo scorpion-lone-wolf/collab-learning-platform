@@ -36,7 +36,11 @@
 - a bounded context groups business concepts, rules, data ownership, and language with one clear responsibility;
 - the same real-world person/course can appear in multiple bounded contexts with different meanings;
 - Course Management, Payment, Enrollment, Auth/Profile, and Learning Progress own different business truths even when they participate in the same workflow;
-- Course owns course configuration/publishing truth, Payment owns financial transaction/refund truth, Enrollment owns course-entitlement truth, and Learning Progress owns learner-completion truth.
+- Course owns course configuration/publishing and current-price truth, Payment owns financial transaction/refund and historical-charge truth, Enrollment owns course-entitlement truth, and Learning Progress owns learner-completion truth;
+- database-per-service is primarily an ownership/access boundary and does not require a separate physical database server for every service;
+- a service should not directly read or modify another service's private database;
+- direct cross-service database access couples consumers to the owning service's internal schema and weakens independent evolution/deployment;
+- when another service needs owned information, it should obtain it through an explicit service contract rather than bypassing the owner.
 
 ## Partially Understands
 
@@ -44,21 +48,19 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- source-of-truth/data ownership across independently deployed services needs deeper practice;
-- sync-vs-async decisions have only been introduced conceptually.
+- synchronous vs asynchronous communication has only been introduced conceptually.
 
 ## Needs Reinforcement
 
 - cross-domain bounded-context discovery using unfamiliar domains;
 - identifying business capability vs entity/table vs workflow;
 - defining one-sentence responsibility statements;
-- identifying authoritative source-of-truth ownership;
 - using business rules, language, cohesion, and reasons-to-change to justify boundaries;
 - deciding whether a boundary is only a logical/module boundary or may justify a separate service boundary;
-- database-per-service/data ownership implications;
+- deeper database-per-service tradeoffs as they appear in later distributed workflows;
 - synchronous vs asynchronous communication tradeoffs.
 
-These are **reinforcement areas, not blockers for starting 0.9**. Revisit them when useful and use later sections to strengthen the same reasoning skills.
+These are reinforcement areas, not blockers for the next curriculum section.
 
 ## Misconceptions / Weak Areas
 
@@ -69,7 +71,8 @@ These are **reinforcement areas, not blockers for starting 0.9**. Revisit them w
 - clarified that a monolith does not automatically mean one failure always breaks every capability;
 - clarified that microservices do not automatically guarantee failure isolation;
 - clarified that Course content ownership is distinct from learner progress ownership;
-- clarified that current course price metadata and historical amount actually charged are different business truths owned by different contexts.
+- clarified that current course price metadata and historical amount actually charged are different business truths owned by different contexts;
+- demonstrated that another service needing data does not make it a co-owner of that data.
 
 ## Completed Understanding Checks
 
@@ -82,7 +85,9 @@ These are **reinforcement areas, not blockers for starting 0.9**. Revisit them w
 - grouped Course creation/lesson/publishing responsibilities separately from Payment;
 - separated Auth credential/security responsibilities from Profile responsibilities;
 - separated Enrollment entitlement from Learning Progress;
-- correctly separated Course (publish/manage), Payment (purchase/refund), and Enrollment (grant/revoke access) and supplied a business rule for each.
+- correctly separated Course (publish/manage), Payment (purchase/refund), and Enrollment (grant/revoke access);
+- for 0.9, correctly assigned current Course price to Course, actual historical charged amount to Payment, and current access entitlement to Enrollment;
+- explained that Payment should use an explicit service contract rather than directly SELECT from Enrollment's private database, citing ownership and schema-coupling consequences.
 
 ## Assignment History
 
@@ -94,52 +99,24 @@ No active milestone assignment yet.
 
 ## Parking Lot
 
-- Continue bounded-context/responsibility-mapping practice across unfamiliar domains when requested or when later reasoning reveals weakness. This is deliberately deferred and does not block 0.9.
+- Continue bounded-context/responsibility-mapping practice across unfamiliar domains when requested or when later reasoning reveals weakness.
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.8 are complete as curriculum sections**.
+Sections **0.1 through 0.9 are complete as curriculum sections**.
 
-The learner has correctly solved several bounded-context and responsibility-mapping exercises. Confidence in independently deriving boundaries is still developing, but the learner explicitly chose to proceed rather than make additional practice a prerequisite.
-
-The next formal section is **0.9 — Data ownership and database-per-service**.
+The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution.
 
 ## Teaching Approach Requirement
 
-For all future teaching in this project, especially architecture/design topics, do not jump directly to conclusions such as "this is the bounded context" or "this service owns this responsibility."
-
-Show the reasoning path explicitly and step by step:
-
-1. start from the raw requirement/problem;
-2. identify the relevant actors and actions;
-3. ask what business question is actually being answered;
-4. identify the rules and data involved;
-5. determine what must stay consistent together;
-6. identify the authoritative owner/source of truth;
-7. compare plausible alternative groupings;
-8. explain why one boundary is better and why the others are weaker;
-9. only then name the context/module/service boundary;
-10. apply the same reasoning method to new domains so the learner can reproduce the process independently.
-
-This requirement applies across the curriculum, not only to bounded contexts. The learner's goal is to understand and reproduce the design thought process, not memorize final answers.
+For architecture/design topics, continue showing the reasoning path explicitly: raw problem -> actors/actions -> business question -> rules/data -> consistency needs -> authoritative owner -> alternatives -> boundary choice -> named context/service -> transfer to a new example.
 
 ## Next Teaching Step
 
-Begin **0.9 — Data ownership and database-per-service**.
+Begin **0.10 — Service contracts**.
 
-Teach it from the engineering problem upward and show the full reasoning path rather than presenting ownership rules as conclusions. Connect new data-ownership decisions back to the bounded-context reasoning already learned, and use concrete examples to show why a particular service becomes authoritative for particular data.
-
-Do not require completion of the deferred reinforcement block before 0.9. Preserve the reinforcement need and revisit it naturally when relevant.
+Start from the problem created by database ownership: if Payment cannot directly read Enrollment's private database but legitimately needs Enrollment-owned information, define how services communicate through explicit contracts. Build the concept from the engineering problem upward before introducing contract forms or implementation details.
 
 ## Session Update Rule
 
-At the end of every substantial learning session, update this file with:
-
-- newly demonstrated understanding;
-- concepts that are only partially understood;
-- weak areas or misconceptions;
-- completed reasoning checks/assignments and their real verdicts;
-- deferred topics worth preserving;
-- one precise **Next Teaching Step**.
-
-Keep this file concise enough that a new session can reconstruct the learner's actual position quickly.
+At the end of every substantial learning session, update this file with newly demonstrated understanding, partial understanding, weak areas/misconceptions, completed checks/assignments, deferred topics, and one precise **Next Teaching Step**.
