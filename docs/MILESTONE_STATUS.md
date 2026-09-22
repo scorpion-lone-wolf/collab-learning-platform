@@ -35,22 +35,23 @@ No application/service implementation has started yet.
 - 0.6 — Why microservices are difficult;
 - 0.7 — Business capabilities and bounded contexts;
 - 0.8 — Service responsibility mapping;
+- 0.9 — Data ownership and database-per-service;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
-- why shared data access weakens service independence;
-- why long synchronous dependency chains create request coupling;
+- shared data access weakens service independence;
+- long synchronous dependency chains create request coupling;
 - distributed-monolith warning signs;
-- business-capability decomposition rather than table/technical-layer decomposition;
+- business-capability decomposition;
 - bounded-context reasoning using responsibility, source of truth, business rules, cohesion, and reasons to change;
-- distinction between Course, Payment, Enrollment, Auth/Profile, and Learning Progress ownership;
-- cross-domain reinforcement started for bounded-context discovery and responsibility mapping.
+- Course, Payment, Enrollment, Auth/Profile, and Learning Progress ownership distinctions;
+- database-per-service as a logical ownership/access boundary, not necessarily one physical database server per service;
+- direct cross-service database access creates schema and ownership coupling.
 
 ## Still Pending
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.9 — Data ownership and database-per-service;
 - 0.10 — Service contracts;
 - 0.11 — Synchronous communication;
 - 0.12 — Asynchronous communication;
@@ -64,7 +65,7 @@ Continue the established Milestone 0 lesson sequence exactly:
 - 0.20 — Mandatory Milestone 0 assignment;
 - 0.21 — Milestone 0 completion gate.
 
-Additional bounded-context/responsibility-mapping reinforcement remains useful and should be revisited when the learner requests it or when later reasoning reveals a gap, but it is **not a prerequisite blocking 0.9**.
+Additional bounded-context/responsibility-mapping reinforcement remains useful but is not a prerequisite for progression.
 
 ## Relevant Files / Components
 
@@ -87,8 +88,9 @@ Learner correctly reasoned that:
 - a timeout does not prove that a remote payment failed;
 - blindly retrying an ambiguous payment outcome can duplicate a charge;
 - Course Management and Payment are separate bounded contexts even when they participate in one purchase workflow;
-- Auth/Profile, Enrollment/Learning Progress, and Course/Payment responsibilities can reference the same real-world user/course while owning different business truths;
-- Course owns course configuration/publishing truth, Payment owns financial transaction/refund truth, and Enrollment owns access-entitlement truth.
+- Course owns current course pricing/configuration truth, Payment owns the historical amount actually charged, and Enrollment owns current course-access entitlement;
+- Payment should not directly query Enrollment's database for access state because doing so violates ownership and couples Payment to Enrollment's internal schema;
+- an Enrollment schema/field change should remain an Enrollment implementation detail rather than forcing Payment changes through direct database coupling.
 
 ## Current Milestone Completion Gate
 
@@ -105,30 +107,18 @@ Learner correctly reasoned that:
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.8 are complete as curriculum sections**.
+Sections **0.1 through 0.9 are complete as curriculum sections**.
+
+The 0.9 understanding check was completed successfully: the learner separated current Course price, historical Payment charge amount, and Enrollment access state into their authoritative owners, and explained why direct cross-service database access creates ownership and schema coupling.
 
 No implementation work has been performed, and Milestone 0 remains in progress.
-
-The learner requested that the previous reinforcement block **not block progression**. Bounded-context and responsibility-mapping confidence is still an area to strengthen, but the next formal section is now **0.9 — Data ownership and database-per-service**.
-
-A new conversation should resume directly at **0.9** while continuing to apply the reasoning-first teaching method. Do not erase or forget the recorded weak areas; reinforce them naturally when relevant.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-After sections 0.9–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+After sections 0.10–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
-At the end of every substantial learning/building session, update this file with:
-
-- the real current milestone and status;
-- newly implemented work;
-- remaining work;
-- relevant files/components changed;
-- verification performed;
-- completion-gate state;
-- one precise **Next Engineering Step**.
-
-Preserve completed-milestone history, but do not turn this file into a session transcript.
+At the end of every substantial learning/building session, update this file with the real current milestone/status, newly implemented work, remaining work, relevant files/components, verification performed, completion-gate state, and one precise **Next Engineering Step**.
