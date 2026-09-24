@@ -115,6 +115,8 @@ The 0.10 understanding checks were completed successfully: the learner explained
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
+A new chat/session should resume directly at **0.11 — Synchronous communication**. Do not repeat 0.10 unless the learner asks for review.
+
 ## Next Engineering Step
 
 No code/infrastructure action yet.
