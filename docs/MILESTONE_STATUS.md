@@ -36,6 +36,7 @@ No application/service implementation has started yet.
 - 0.7 — Business capabilities and bounded contexts;
 - 0.8 — Service responsibility mapping;
 - 0.9 — Data ownership and database-per-service;
+- 0.10 — Service contracts;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -52,7 +53,6 @@ No application/service implementation has started yet.
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.10 — Service contracts;
 - 0.11 — Synchronous communication;
 - 0.12 — Asynchronous communication;
 - 0.13 — Sync vs async decision-making;
@@ -107,9 +107,11 @@ Learner correctly reasoned that:
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.9 are complete as curriculum sections**.
+Sections **0.1 through 0.10 are complete as curriculum sections**.
 
 The 0.9 understanding check was completed successfully: the learner separated current Course price, historical Payment charge amount, and Enrollment access state into their authoritative owners, and explained why direct cross-service database access creates ownership and schema coupling.
+
+The 0.10 understanding checks were completed successfully: the learner explained why a service contract should expose a stable business capability rather than internal persistence fields, identified leaked cross-service business-rule interpretation, distinguished internal implementation changes from contract changes, and correctly kept refund/access ownership separated between Payment and Enrollment.
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
