@@ -120,6 +120,8 @@ For architecture/design topics, continue showing the reasoning path explicitly: 
 
 ## Next Teaching Step
 
+A new chat should resume directly at **0.11 — Synchronous communication**. Do not repeat 0.10 unless review is requested.
+
 Begin **0.11 — Synchronous communication**.
 
 Start from the engineering problem: when a caller needs an answer before it can continue, explain request/response coupling, availability dependency, latency, timeouts, and failure propagation before introducing concrete HTTP implementation details.
