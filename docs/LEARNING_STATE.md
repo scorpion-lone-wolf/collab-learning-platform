@@ -40,7 +40,11 @@
 - database-per-service is primarily an ownership/access boundary and does not require a separate physical database server for every service;
 - a service should not directly read or modify another service's private database;
 - direct cross-service database access couples consumers to the owning service's internal schema and weakens independent evolution/deployment;
-- when another service needs owned information, it should obtain it through an explicit service contract rather than bypassing the owner.
+- when another service needs owned information, it should obtain it through an explicit service contract rather than bypassing the owner;
+- service contracts should expose stable business capabilities/semantics rather than mirror private database rows;
+- a consumer should not reinterpret another service's internal status codes or business rules;
+- internal schema changes should not require consumer changes when the external contract remains compatible;
+- Payment can communicate refund outcome, but Enrollment remains responsible for deciding and applying course-access changes.
 
 ## Partially Understands
 
@@ -48,7 +52,7 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- synchronous vs asynchronous communication has only been introduced conceptually.
+- synchronous vs asynchronous communication has only been introduced conceptually and is the next area to develop.
 
 ## Needs Reinforcement
 
@@ -87,7 +91,10 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - separated Enrollment entitlement from Learning Progress;
 - correctly separated Course (publish/manage), Payment (purchase/refund), and Enrollment (grant/revoke access);
 - for 0.9, correctly assigned current Course price to Course, actual historical charged amount to Payment, and current access entitlement to Enrollment;
-- explained that Payment should use an explicit service contract rather than directly SELECT from Enrollment's private database, citing ownership and schema-coupling consequences.
+- explained that Payment should use an explicit service contract rather than directly SELECT from Enrollment's private database, citing ownership and schema-coupling consequences;
+- identified a contract that exposed entire Course/Payment internal rows as over-coupled and recognized leaked business-rule interpretation;
+- designed smaller business-oriented contracts and explained why internal database-column changes should not affect consumers;
+- correctly reasoned that Payment should not directly revoke Enrollment-owned access after a refund.
 
 ## Assignment History
 
@@ -103,9 +110,9 @@ No active milestone assignment yet.
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.9 are complete as curriculum sections**.
+Sections **0.1 through 0.10 are complete as curriculum sections**.
 
-The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution.
+The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes.
 
 ## Teaching Approach Requirement
 
@@ -113,9 +120,9 @@ For architecture/design topics, continue showing the reasoning path explicitly: 
 
 ## Next Teaching Step
 
-Begin **0.10 — Service contracts**.
+Begin **0.11 — Synchronous communication**.
 
-Start from the problem created by database ownership: if Payment cannot directly read Enrollment's private database but legitimately needs Enrollment-owned information, define how services communicate through explicit contracts. Build the concept from the engineering problem upward before introducing contract forms or implementation details.
+Start from the engineering problem: when a caller needs an answer before it can continue, explain request/response coupling, availability dependency, latency, timeouts, and failure propagation before introducing concrete HTTP implementation details.
 
 ## Session Update Rule
 
