@@ -37,6 +37,7 @@ No application/service implementation has started yet.
 - 0.8 — Service responsibility mapping;
 - 0.9 — Data ownership and database-per-service;
 - 0.10 — Service contracts;
+- 0.11 — Synchronous communication;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -53,7 +54,6 @@ No application/service implementation has started yet.
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.11 — Synchronous communication;
 - 0.12 — Asynchronous communication;
 - 0.13 — Sync vs async decision-making;
 - 0.14 — First Collaborative Learning Platform HLD;
@@ -90,7 +90,9 @@ Learner correctly reasoned that:
 - Course Management and Payment are separate bounded contexts even when they participate in one purchase workflow;
 - Course owns current course pricing/configuration truth, Payment owns the historical amount actually charged, and Enrollment owns current course-access entitlement;
 - Payment should not directly query Enrollment's database for access state because doing so violates ownership and couples Payment to Enrollment's internal schema;
-- an Enrollment schema/field change should remain an Enrollment implementation detail rather than forcing Payment changes through direct database coupling.
+- an Enrollment schema/field change should remain an Enrollment implementation detail rather than forcing Payment changes through direct database coupling;
+- Enrollment -> Course is a synchronous dependency when Enrollment cannot finish the current student request until Course replies;
+- a slow required synchronous dependency contributes directly to the caller's end-to-end latency because the caller is waiting for that result.
 
 ## Current Milestone Completion Gate
 
@@ -107,21 +109,23 @@ Learner correctly reasoned that:
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.10 are complete as curriculum sections**.
+Sections **0.1 through 0.11 are complete as curriculum sections**.
 
 The 0.9 understanding check was completed successfully: the learner separated current Course price, historical Payment charge amount, and Enrollment access state into their authoritative owners, and explained why direct cross-service database access creates ownership and schema coupling.
 
 The 0.10 understanding checks were completed successfully: the learner explained why a service contract should expose a stable business capability rather than internal persistence fields, identified leaked cross-service business-rule interpretation, distinguished internal implementation changes from contract changes, and correctly kept refund/access ownership separated between Payment and Enrollment.
 
+The 0.11 understanding check was completed successfully: the learner explained that Enrollment -> Course is synchronous because Enrollment cannot complete the current request until Course responds, and correctly traced how a slow Course dependency increases the student's end-to-end latency through the waiting caller.
+
 No implementation work has been performed, and Milestone 0 remains in progress.
 
-A new chat/session should resume directly at **0.11 — Synchronous communication**. Do not repeat 0.10 unless the learner asks for review.
+**0.12 — Asynchronous communication has NOT been started for checkpoint purposes.** A new chat/session should begin 0.12 from the start. Do not repeat 0.11 unless the learner asks for review.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-After sections 0.10–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+After sections 0.12–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
