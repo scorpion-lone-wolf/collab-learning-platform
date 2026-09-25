@@ -7,6 +7,7 @@
 > **Backend:** NestJS + TypeScript for the primary application services; Go for designated CPU/concurrency-intensive services where benchmarking justifies the split
 > **Frontend:** Next.js + TypeScript
 > **Primary event backbone:** Apache Kafka
+> **Background jobs / work queues:** BullMQ via `@nestjs/bullmq` using the Redis backend in this project
 > **Cache / ephemeral state:** Redis
 > **Object storage:** Amazon S3
 > **Deployment:** Docker + Kubernetes on AWS EKS
@@ -34,11 +35,11 @@ When two parts of this document appear to overlap, interpret them using this pre
 
 # Learner Background
 
-> **The learner is new to the entire stack, not just one piece of it.** They cannot be assumed to know the concepts, conventions, or syntax of any technology used in this project going in — this includes NestJS, TypeScript, Next.js, Apache Kafka, Redis, Amazon S3, Docker, Kubernetes/EKS, OpenTelemetry/Prometheus/Grafana, GitHub Actions/ECR/Argo CD, Terraform, RAG/embeddings/vector databases, PostgreSQL, WebSockets, and any other tool, library, or pattern the curriculum brings in — even ones not listed here explicitly.
+> **The learner is new to the entire stack, not just one piece of it.** They cannot be assumed to know the concepts, conventions, or syntax of any technology used in this project going in — this includes NestJS, TypeScript, Next.js, Apache Kafka, BullMQ, Redis, Amazon S3, Docker, Kubernetes/EKS, OpenTelemetry/Prometheus/Grafana, GitHub Actions/ECR/Argo CD, Terraform, RAG/embeddings/vector databases, PostgreSQL, WebSockets, and any other tool, library, or pattern the curriculum brings in — even ones not listed here explicitly.
 >
 > This means: whenever **any** technology is used to implement something in this project, the mentor must teach the relevant concepts of that technology **from the ground up**, the first time they appear, before or as part of using them. This is in addition to, not instead of, the general "Problem first → Mental model → Why it exists" teaching order below; it applies to each technology's own building blocks and idioms, not only to the architectural pattern being implemented.
 >
-> Concretely, the first time any new tool, framework, concept, or primitive from a given technology shows up (e.g. NestJS's modules/controllers/providers/DI/decorators/guards/interceptors/pipes/gateways; Kafka's topics/partitions/consumer groups/offsets; Redis's data structures/expiry/pub-sub; Docker's images/containers/volumes/networking; Kubernetes's pods/deployments/services/ingress; Terraform's state/providers/modules; OpenTelemetry's traces/spans/metrics; or anything else), the mentor should cover:
+> Concretely, the first time any new tool, framework, concept, or primitive from a given technology shows up (e.g. NestJS's modules/controllers/providers/DI/decorators/guards/interceptors/pipes/gateways; Kafka's topics/partitions/consumer groups/offsets; BullMQ's queues/jobs/producers/workers/job states/retries/schedulers; Redis's data structures/expiry/pub-sub; Docker's images/containers/volumes/networking; Kubernetes's pods/deployments/services/ingress; Terraform's state/providers/modules; OpenTelemetry's traces/spans/metrics; or anything else), the mentor should cover:
 > - what the concept is and the problem it solves within that technology specifically (not just the general architecture problem)
 > - the minimal syntax/shape/command of it, explained piece by piece
 > - how it fits into the surrounding system (request lifecycle, cluster, pipeline, etc.)
@@ -1552,6 +1553,10 @@ Video Processing Worker and CDN are covered in §30.1–§30.4 (extensions to th
 
 The exact architecture will evolve as we implement it. The Assessment Service is the learner-facing owner of coding submissions/results; the code-execution and similarity boxes are asynchronous compute workers behind Kafka, not additional public APIs. Their Go implementations are mandatory benchmark/learning implementations, while Milestone 38.5 decides whether Go remains the final production runtime. The Audit / Activity Consumer is intentionally not edge-facing.
 
+**BullMQ placement in this architecture:** BullMQ is an internal work-queue mechanism used by selected Node.js bounded contexts; it is **not** a replacement event backbone and is intentionally not drawn as another cross-service bus in the top-level diagram. Kafka carries durable cross-service facts such as `CoursePublished`, `PaymentSucceeded`, `FileUploaded`, and `GradingCompleted`. A service may consume one of those Kafka events and then enqueue an internal BullMQ job when the resulting work needs job-specific semantics such as delayed execution, retries/backoff, priority, bounded worker concurrency, progress/state, or recurring scheduling.
+
+For this project, BullMQ uses a Redis backend through NestJS. Local development may share one Redis server with clear key prefixes for convenience, but production queue state must be treated as a separate reliability role from disposable cache data: configure persistence deliberately, use a non-evicting memory policy for the BullMQ datastore, and prefer a separate Redis/ElastiCache deployment from eviction-oriented cache/presence workloads.
+
 ---
 
 # 6. Services We Will Build
@@ -1761,6 +1766,25 @@ Responsibilities:
 
 Most notifications will be triggered asynchronously from Kafka events.
 
+Kafka and BullMQ have different jobs here:
+
+```text
+Domain event from another service
+        |
+      Kafka
+        |
+Notification Service
+        | persist notification intent / delivery state
+        | enqueue owned delivery work
+      BullMQ
+        |
+Notification Worker
+        |
+email / push / other provider
+```
+
+Kafka preserves the cross-service business fact and allows independent subscribers. BullMQ owns the Notification Service's execution work: attempts, backoff, delayed delivery, worker concurrency, failed-job inspection, and safe reprocessing. The database remains authoritative for business-facing notification/delivery state; BullMQ is not the long-term notification history.
+
 ---
 
 ## 6.9 File Service
@@ -1793,7 +1817,8 @@ This extends the File Service and is covered in Milestones 24.1–24.2 without c
 
 Responsibilities of a dedicated video-processing worker:
 
-- consume `FileUploaded` events (filtered to video content types);
+- consume `FileUploaded` events from Kafka (filtered to video content types);
+- after validating/deduplicating the event, enqueue an internal BullMQ transcode job with a stable job identity derived from the source/event identity;
 - probe the source file (duration, resolution, codec, bitrate);
 - transcode the source into multiple renditions (e.g. 360p / 480p / 720p / 1080p);
 - package renditions into an adaptive bitrate format (HLS: `.m3u8` playlists + `.ts`/`fMP4` segments);
@@ -1801,7 +1826,8 @@ Responsibilities of a dedicated video-processing worker:
 - upload all outputs back to S3 under a predictable key structure;
 - track per-video processing status (`queued` → `processing` → `ready` / `failed`) in the database;
 - emit `VideoProcessingStarted`, `VideoProcessingCompleted`, and `VideoProcessingFailed` events;
-- support retry of failed transcode jobs without reprocessing already-completed renditions.
+- support BullMQ retry/backoff of failed transcode jobs without reprocessing already-completed renditions;
+- bound worker concurrency so FFmpeg processes cannot exhaust the node; expose queue depth, oldest-job age, processing duration, retry count, and failed-job count.
 
 This is intentionally kept separate from generic file processing (antivirus scanning, thumbnails for documents) because video transcoding is CPU/GPU-intensive, long-running, and benefits from its own worker pool and scaling policy.
 
@@ -2124,6 +2150,80 @@ We may demonstrate RabbitMQ separately to understand the difference rather than 
 
 ---
 
+# 11.1 Kafka vs BullMQ — Event Stream vs Work Queue
+
+BullMQ is added to the core project for a different problem than Kafka. The learner is new to both technologies, so the mentor must never present this as "Kafka is for async" and "BullMQ is another async tool." Teach the semantic difference first.
+
+## Project decision rule
+
+Use **Kafka** when the message represents a durable fact that happened in the business/system and independent consumers may need to react now or later.
+
+Examples:
+
+- `UserCreated`;
+- `CoursePublished`;
+- `PaymentSucceeded`;
+- `RefundCompleted`;
+- `FileUploaded`;
+- `VideoProcessingCompleted`;
+- `GradingCompleted`;
+- audit/analytics/search-indexing event streams.
+
+Kafka is the better fit when we need durable retention, replay, partitioned ordering, multiple independent subscriber groups, and a stable cross-service event contract.
+
+Use **BullMQ** when one bounded context owns a concrete unit of work and needs worker-oriented execution semantics.
+
+Examples:
+
+- send one email or push notification;
+- retry a provider call after backoff;
+- run payment-reconciliation work on a schedule;
+- deliver a reminder after a delay;
+- clean expired temporary uploads;
+- process a bounded search-reindex batch;
+- execute a video-transcoding job with controlled worker concurrency.
+
+BullMQ is the better fit when we need job states, delayed execution, retries/backoff, priority, bounded concurrency, recurring application jobs, progress/inspection, and horizontal worker pools.
+
+## Important non-rule
+
+> Do **not** choose by payload size or by the vague statement "this is asynchronous." Choose by semantics: **business fact/event stream** vs **owned unit of work/job**.
+
+A common production flow in this project is therefore:
+
+```text
+Service A changes business state
+        |
+      Kafka event
+        |
+Service B consumes the fact
+        |
+        +--> update its own database/read model
+        |
+        +--> enqueue BullMQ job when long-running/retryable work is owned by Service B
+                       |
+                    Worker(s)
+```
+
+## Reliable Kafka -> BullMQ handoff
+
+Adding BullMQ after Kafka introduces a new failure boundary. The consumer must not acknowledge/commit the Kafka event as successfully handled before the required BullMQ job has been durably accepted. Because a crash can occur after enqueue but before the Kafka offset is committed, the Kafka event may be delivered again. The BullMQ enqueue path must therefore be duplicate-safe using a stable job identity/deduplication strategy derived from the event/business identity, and the job handler itself must still be idempotent.
+
+## When BullMQ is deliberately not used
+
+- not as the canonical domain-event history;
+- not for events that need independent subscriber groups and replay;
+- not for simple synchronous queries that require an immediate answer;
+- not as the saga's source of truth or payment ledger;
+- not for the Go grading/similarity cross-service contracts, which remain Kafka-based and language-neutral;
+- not merely because a function is `async` in TypeScript.
+
+## Version-aware teaching rule
+
+Use the current BullMQ and NestJS official documentation when this milestone is implemented. The current BullMQ major version uses **Job Schedulers** for recurring work, and old tutorials that rely on legacy repeatable-job APIs or `QueueScheduler` must not be copied blindly. Teach the API that exists in the version actually installed by the project.
+
+---
+
 # 12. Event Contract Design
 
 We will cover:
@@ -2314,6 +2414,8 @@ We will implement or discuss:
 - reprocessing;
 - event tombstones where relevant.
 
+We will explicitly distinguish **Kafka delivery/retry mechanics** from **BullMQ job retry mechanics**. A Kafka retry topic or DLQ is about failure to consume/process an event stream record safely; a BullMQ retry is about re-attempting an owned job. We will avoid stacking retries at both layers without a documented retry budget, because nested retries can multiply attempts and create retry storms.
+
 ---
 
 # 19. Redis
@@ -2327,7 +2429,10 @@ Examples:
 - session/token metadata where appropriate;
 - WebSocket presence;
 - distributed Socket.IO adapter/fan-out;
-- short-lived locks only when justified.
+- short-lived locks only when justified;
+- BullMQ job state for selected background-work queues, using a deliberately configured Redis role rather than treating queue keys as disposable cache entries.
+
+For local development, one Redis server may host cache/presence and BullMQ keys with clear prefixes to keep setup small. In production, prefer a separate Redis/ElastiCache deployment for BullMQ because the operational requirements conflict with a typical cache: BullMQ queue keys must not be evicted arbitrarily, persistence must be configured deliberately, and queue memory/backlog must be capacity-planned.
 
 We will cover:
 
@@ -2337,7 +2442,9 @@ We will cover:
 - cache stampede;
 - stale data;
 - distributed cache failure;
-- why Redis should not become an accidental primary database.
+- why Redis should not become an accidental primary database;
+- why BullMQ's Redis data is operationally durable job state even though Redis is not the business source of truth;
+- BullMQ Redis persistence and `maxmemory-policy=noeviction` requirements, plus why they conflict with an eviction-oriented cache configuration.
 
 ---
 
@@ -2602,7 +2709,11 @@ FileUploaded event (video content-type)
    |
 Kafka
    |
-Video Processing Worker
+Video Processing Service consumer
+   |
+BullMQ transcode queue
+   |
+Video Processing Worker pool
    |
    +--> probe source (ffprobe)
    +--> transcode to N renditions (ffmpeg)
@@ -2624,6 +2735,8 @@ Key ideas:
 - multiple renditions plus an HLS manifest are what make adaptive-bitrate playback possible on the frontend — a single MP4 file cannot switch quality mid-playback;
 - job status must be tracked so the frontend can show "processing," "ready," or "failed" states, and so a crashed worker can resume/retry instead of silently losing the job;
 - idempotency matters here too: if the worker consumes the same `FileUploaded` event twice (at-least-once delivery), it must not double-transcode or double-charge compute.
+- the Kafka consumer and BullMQ worker are separate reliability stages: the service must make the Kafka-to-BullMQ handoff duplicate-safe, and a worker retry must be safe even if FFmpeg or an upload step partially completed;
+- BullMQ concurrency limits control how many FFmpeg jobs each worker may start, while Kubernetes later controls how many worker pods exist; these are two different concurrency/scaling layers.
 
 **Why FFmpeg-as-a-subprocess is enough, and doesn't need a CPU-bound rewrite**
 
@@ -2760,6 +2873,8 @@ Topics:
 - eventual consistency;
 - full reindex;
 - zero-downtime index alias switching.
+
+Normal incremental indexing remains Kafka-driven because `CoursePublished` / `CourseUpdated` are domain events. A **full reindex**, however, is operator/application-owned work rather than a new business fact. Milestone 26 will use BullMQ to coordinate bounded reindex batches, retries, progress, and worker concurrency while OpenSearch aliases provide the zero-downtime cutover.
 
 ---
 
@@ -2926,6 +3041,8 @@ Not every dependency will be introduced on day one.
 
 We will add infrastructure only when a milestone needs it.
 
+BullMQ does not add another broker container in local development; it uses Redis. For learning convenience, the local project may use the same Redis server with separate BullMQ prefixes. Before production deployment we will split cache/presence and BullMQ job-state roles where their persistence/eviction requirements differ.
+
 ---
 
 # 37. Database Migrations
@@ -2989,6 +3106,10 @@ Examples:
 http_request_duration_seconds
 http_requests_total
 kafka_consumer_lag
+bullmq_queue_depth
+bullmq_oldest_waiting_job_seconds
+bullmq_job_failures_total
+bullmq_job_duration_seconds
 db_query_duration
 cache_hit_total
 payment_failure_total
@@ -3057,6 +3178,7 @@ Grafana dashboards will include:
 - pod health;
 - database pool saturation;
 - Kafka lag;
+- BullMQ queue depth, oldest waiting job, job latency, retry/failure rate, and worker saturation;
 - Redis performance;
 - WebSocket connections;
 - payment failures;
@@ -3132,7 +3254,9 @@ Where practical, integration tests will use disposable infrastructure such as:
 
 - PostgreSQL;
 - Kafka;
-- Redis.
+- Redis (including BullMQ queue/worker integration where relevant).
+
+BullMQ integration tests must verify more than `queue.add()`: worker execution, retry/backoff behavior, duplicate-safe job identity/idempotency, failure state, and recovery after worker restart where the milestone requires it.
 
 This prevents integration tests from depending on a developer's manually configured machine.
 
@@ -3183,6 +3307,9 @@ We will deliberately test scenarios such as:
 - Payment Service timeout;
 - Kafka unavailable;
 - duplicate Kafka event;
+- BullMQ Redis/backend unavailable while producing a job;
+- BullMQ worker terminates after starting work but before completion acknowledgement;
+- BullMQ backlog/oldest-job age grows while workers are saturated;
 - Redis unavailable;
 - database restart;
 - pod termination during request;
@@ -3251,7 +3378,8 @@ We will add:
 - NetworkPolicy;
 - Pod Security concepts;
 - autoscaling;
-- event/queue-driven autoscaling concepts (for example KEDA);
+- event/queue-driven autoscaling concepts (for example KEDA), including BullMQ queue depth/oldest-job-age signals where a supported scaler or exported metric is appropriate;
+- independent BullMQ worker Deployments with explicit concurrency, CPU/memory requests/limits, and graceful termination;
 - dedicated compute worker pools where justified;
 - taints/tolerations and workload placement;
 - PriorityClass for protecting latency-sensitive services;
@@ -3294,7 +3422,8 @@ EKS
    |
    +--> RDS / Aurora PostgreSQL
    +--> Amazon MSK
-   +--> ElastiCache
+   +--> ElastiCache / Redis for cache and presence
+   +--> dedicated Redis/ElastiCache role for BullMQ job state where production requirements justify separation
    +--> Amazon S3
    +--> Amazon OpenSearch Service
    +--> Secrets Manager
@@ -3553,14 +3682,17 @@ During Kubernetes termination:
 1. stop accepting new requests;
 2. finish in-flight work;
 3. stop consuming new Kafka messages;
-4. finish/commit safe message processing;
-5. close database connections;
-6. exit.
+4. finish/commit safe Kafka message processing;
+5. stop claiming new BullMQ jobs;
+6. finish safely completable in-flight jobs or allow them to become retryable according to the queue policy;
+7. close queue/Redis and database connections;
+8. exit.
 
 This is particularly important for:
 
 - WebSockets;
 - Kafka consumers;
+- BullMQ workers, especially long-running jobs;
 - payment processing.
 
 ---
@@ -3572,6 +3704,8 @@ We will create runbooks for common failures.
 Examples:
 
 - Kafka consumer lag increasing;
+- BullMQ queue depth/oldest-job age increasing;
+- BullMQ workers repeatedly failing/stalling or Redis queue storage approaching capacity;
 - database connections exhausted;
 - 5xx rate spike;
 - Redis unavailable;
@@ -3693,6 +3827,7 @@ messages/second
 course file size
 search QPS
 Kafka events/second
+BullMQ jobs/second, queue depth, oldest-job age, and worker concurrency
 RAG requests/minute
 ```
 
@@ -3767,6 +3902,8 @@ Before calling the project production ready, we will review:
 - idempotency;
 - outbox;
 - DLQ;
+- BullMQ job idempotency/deduplication, retry budgets, failed-job handling, and backlog recovery;
+- BullMQ datastore persistence/non-eviction configuration where used;
 - graceful shutdown.
 
 ## Security
@@ -3992,6 +4129,8 @@ You should be able to explain, not just copy code for:
 - strong consistency;
 - REST vs gRPC;
 - commands vs events;
+- event stream vs work queue vs scheduled job;
+- why Kafka and BullMQ coexist instead of replacing one another;
 - Kafka partitions;
 - consumer groups;
 - offset handling;
@@ -4004,6 +4143,7 @@ You should be able to explain, not just copy code for:
 - orchestration;
 - compensation;
 - retries;
+- BullMQ queue/job/worker lifecycle, delayed jobs, backoff, job schedulers, concurrency, deduplication, and failure recovery;
 - circuit breakers;
 - cache invalidation;
 - WebSocket scaling;
@@ -4172,27 +4312,50 @@ We will detect and safely repair mismatches such as:
 
 ## Background and Scheduled Jobs
 
-Not every asynchronous task belongs in Kafka.
+Not every asynchronous task belongs in Kafka. BullMQ is the project's concrete Node.js work-queue implementation for cases where job semantics are the better abstraction.
 
 We will explicitly compare:
 
 ```text
-domain event
-vs
-background job
-vs
-scheduled job
+domain event            -> Kafka
+owned background job    -> BullMQ when durable job semantics are required
+scheduled application job -> BullMQ Job Scheduler when queue semantics are useful
+infrastructure/batch schedule -> Kubernetes CronJob later, when that boundary is a better fit
 ```
 
-Examples:
+The mentor must teach BullMQ from zero before expecting the learner to use it: queue, job, producer, worker, job state transitions, Redis-backed storage in this project, serialization, concurrency, retries/backoff, delayed jobs, priorities where justified, deduplication/job identity, idempotent handlers, failed jobs, retention/auto-removal, events/metrics, Job Schedulers, graceful shutdown, and horizontal worker scaling.
 
-- payment reconciliation;
-- temporary upload cleanup;
-- expired-token cleanup;
-- reminder notifications;
-- reindexing;
+Core project uses:
+
+- payment reconciliation — schedule recurring application work and fan out bounded reconciliation jobs;
+- notification delivery — Kafka event intake plus BullMQ provider-delivery jobs and retry/backoff;
+- temporary upload cleanup — delayed/recurring cleanup jobs;
+- expired-token cleanup where a queued/scheduled worker is preferable to an inline sweep;
+- reminder notifications — delayed jobs or scheduled production according to the reminder model;
+- full search reindexing — batch work with progress/retry/concurrency;
 - retention jobs;
-- stale saga recovery.
+- stale saga recovery scans;
+- video transcoding — Kafka `FileUploaded` event -> duplicate-safe BullMQ transcode job -> bounded FFmpeg worker pool.
+
+Cases that remain Kafka-first:
+
+- domain events and their history;
+- events with several independently deployed consumers;
+- search/audit/analytics event streams;
+- cross-language grading and similarity-service contracts;
+- anything that needs replay as an event stream rather than re-execution as a job.
+
+Production rules:
+
+- job handlers must be idempotent because retries/recovery can cause work to be attempted again;
+- do not rely on a custom BullMQ job ID as the only business-level idempotency mechanism, especially after completed/failed jobs are removed;
+- put only the data needed to execute the job in the queue; keep authoritative business state in the owning database;
+- protect secrets/PII because job payloads are stored in the queue backend;
+- configure BullMQ Redis persistence and `maxmemory-policy=noeviction`; do not treat queue keys like disposable cache keys;
+- cap concurrency and job attempts; use exponential backoff/jitter where appropriate and define a retry budget across Kafka + BullMQ + downstream SDK layers;
+- retain enough failed-job metadata for diagnosis without allowing completed/failed job history to grow without bound;
+- monitor queue depth, oldest-job age, processing latency, failures/retries, worker saturation, and Redis memory/persistence health;
+- at implementation time verify the installed BullMQ major-version documentation. Current BullMQ uses Job Schedulers for recurring work; legacy `QueueScheduler`/repeatable-job tutorials must not drive new code.
 
 ## Concrete Schema Registry Implementation
 
@@ -4274,6 +4437,7 @@ purpose
 API
 events published
 events consumed
+BullMQ queues/jobs produced or consumed where applicable
 database
 dependencies
 SLO
@@ -4431,17 +4595,21 @@ Payment -> enrollment -> notification with compensating actions.
 
 Model or implement the equivalent event choreography and compare tradeoffs.
 
-## Milestone 20 — Payment Reconciliation
+## Milestone 20 — Payment Reconciliation and First BullMQ Production Use
 
-Scheduled comparison against provider state and safe repair.
+Scheduled comparison against provider state and safe repair. Introduce BullMQ from the ground up **here, at the first project problem where an application-owned work queue/scheduler is clearly useful**, after Kafka fundamentals/reliability have already been learned.
+
+Teach and implement: event stream vs work queue vs schedule decision, `@nestjs/bullmq` integration, Queue/Job/Worker mental model, Redis-backed job state in this project, Job Scheduler for recurring reconciliation, bounded batch/fan-out jobs where useful, retries/backoff, job identity/deduplication, idempotent repair, failed-job inspection, job retention, graceful shutdown, queue metrics, and production Redis persistence/non-eviction requirements. Explicitly compare BullMQ with Kafka and with the later Kubernetes CronJob option rather than assuming every schedule belongs in BullMQ.
 
 ## Milestone 21 — Notification Service
 
-Event-driven email/in-app delivery jobs, retry, delivery state, notification preferences, and DLQ handling.
+Event-driven email/in-app notifications using a deliberate two-stage architecture: consume durable domain events from Kafka, persist notification/delivery state, then enqueue provider-delivery work to BullMQ. Implement BullMQ workers, attempts/backoff, delayed delivery where needed, bounded concurrency/rate limiting, duplicate-safe job identity, idempotent sending strategy, failed-job inspection/reprocessing, notification preferences, and delivery status. Explicitly distinguish Kafka retry/DLQ concerns from BullMQ job retries/failed jobs so retries are not multiplied accidentally.
 
-## Milestone 22 — Background and Scheduled Jobs
+## Milestone 22 — Background and Scheduled Jobs with BullMQ
 
-Learn when Kafka is not the correct primitive.
+Generalize the BullMQ foundation from Milestones 20–21 and learn when Kafka is not the correct primitive. Implement several real application jobs such as delayed reminders, temporary-upload cleanup, retention/expired-data cleanup, and stale-saga recovery. Cover current BullMQ Job Schedulers, delayed jobs, priorities only when justified, concurrency, deduplication vs true business idempotency, auto-removal/retention, queue events/metrics, worker crash recovery, Redis outage behavior, graceful shutdown, and horizontal worker scaling.
+
+Compare three scheduling choices explicitly: BullMQ Job Scheduler for application-owned recurring work that benefits from queue semantics; Kubernetes CronJob later for isolated infrastructure/batch execution; Kafka only when there is an actual event stream to publish/consume. Do not use BullMQ merely because a task is asynchronous.
 
 ## Milestone 23 — File Service and S3
 
@@ -4453,7 +4621,7 @@ Validation, scanning workflow, lifecycle, retention, multipart upload concepts.
 
 ## Milestone 24.1 — Video Transcoding Pipeline (Extension)
 
-Background video-processing worker consuming `FileUploaded` events: probing source video, transcoding to multiple quality renditions (360p–1080p), packaging as HLS, thumbnail generation, per-video processing status, retry/idempotency, `VideoProcessingCompleted`/`Failed` events wired into the Notification Service. This is additive to Milestone 23/24 and does not change the File Service work already defined there.
+Background video-processing pipeline: consume durable `FileUploaded` events from Kafka, deduplicate/validate them, enqueue a stable BullMQ transcode job, and process the job with a bounded worker pool that launches FFmpeg. Cover the Kafka-to-BullMQ handoff failure window, duplicate-safe enqueue, idempotent partial-output handling, per-video processing status, BullMQ retry/backoff, concurrency and backlog metrics, transcoding to 360p–1080p renditions, HLS packaging, thumbnail generation, and `VideoProcessingCompleted`/`Failed` events published back to Kafka for Notification/Course consumers. This is additive to Milestone 23/24 and does not change the File Service work already defined there.
 
 ## Milestone 24.2 — Adaptive Video Playback and Frontend Player (Extension)
 
@@ -4465,7 +4633,7 @@ OpenSearch indexing from domain events, query API, filters, eventual consistency
 
 ## Milestone 26 — Search Reindex and Schema Evolution
 
-Full rebuilds, mappings, aliases, zero-downtime index changes.
+Full rebuilds, mappings, aliases, and zero-downtime index changes. Keep normal course-change indexing Kafka-driven, but implement operator/application-triggered full reindexing as BullMQ batch work so progress, retries, bounded concurrency, resumability/idempotency, and backlog are explicit.
 
 ## Milestone 27 — Real-Time Chat HLD
 
@@ -4481,7 +4649,7 @@ Multiple replicas, Redis fan-out, presence TTL, graceful connection draining.
 
 ## Milestone 30 — Redis Caching
 
-Cache-aside, invalidation, TTL, stampede protection, cache metrics.
+Cache-aside, invalidation, TTL, stampede protection, cache metrics, and an explicit comparison with the BullMQ Redis role already learned: cache entries may be disposable/evictable according to policy, whereas BullMQ queue state must not be configured as disposable cache data.
 
 ## Milestone 31 — RAG HLD
 
@@ -4715,6 +4883,14 @@ Perform the final architecture, reliability, security, testing, delivery, data, 
 - health endpoints that do not reflect readiness;
 - destructive migrations during deployments;
 - unbounded Kafka consumers;
+- using BullMQ as a replacement domain-event log or replayable event backbone;
+- using Kafka for every background task merely because it is asynchronous;
+- acknowledging a Kafka event before a required Kafka-to-BullMQ handoff is durable;
+- non-idempotent BullMQ workers combined with retries;
+- unlimited BullMQ attempts/concurrency or nested Kafka + BullMQ + SDK retry storms;
+- storing authoritative business state only inside BullMQ job payloads;
+- running BullMQ queue data on an eviction-oriented Redis configuration;
+- copying obsolete BullMQ `QueueScheduler`/legacy repeatable-job tutorials instead of checking the installed major version;
 - unbounded WebSocket connections;
 - Redis becoming an accidental source of truth;
 - cache invalidation with no ownership model;
@@ -4736,25 +4912,27 @@ Perform the final architecture, reliability, security, testing, delivery, data, 
 1. Prefer the simplest architecture that solves the actual problem.
 2. Keep business ownership explicit.
 3. Make failure behavior intentional.
-4. Assume duplicate asynchronous delivery.
-5. Protect every network boundary with timeouts and deliberate retry rules.
-6. Prefer backward-compatible APIs, events, and migrations.
-7. Deploy immutable artifacts.
-8. Use least privilege for humans and workloads.
-9. Keep secrets out of source code and container images.
-10. Instrument systems before production incidents occur.
-11. Measure before optimizing.
-12. Test restore procedures, not only backup creation.
-13. Automate repeatable infrastructure and delivery.
-14. Record important architecture decisions.
-15. Make the system understandable to engineers who did not build it.
-
+4. Choose event streams, work queues, and schedulers by semantics rather than by the vague label "async."
+5. Assume duplicate asynchronous delivery.
+6. Protect every network boundary with timeouts and deliberate retry rules.
+7. Prefer backward-compatible APIs, events, and migrations.
+8. Deploy immutable artifacts.
+9. Use least privilege for humans and workloads.
+10. Keep secrets out of source code and container images.
+11. Instrument systems before production incidents occur.
+12. Measure before optimizing.
+13. Test restore procedures, not only backup creation.
+14. Automate repeatable infrastructure and delivery.
+15. Record important architecture decisions.
+16. Make the system understandable to engineers who did not build it.
 # Final Teaching Objective
 
 At completion, the learner should be able to explain—not merely demonstrate that a technology was used:
 
 ```text
 Why Kafka was selected.
+Why BullMQ was selected for specific owned jobs instead of being used as another event bus.
+Why a specific asynchronous flow belongs in Kafka, BullMQ, a scheduler/CronJob, or no queue at all.
 Why a particular interaction is synchronous or asynchronous.
 Why each service owns its database.
 How duplicate events are handled.
@@ -4957,7 +5135,8 @@ These are intentionally not prerequisites for the main learning path.
 | Package management          | pnpm                                                                    |
 | Relational DB               | PostgreSQL                                                              |
 | ORM                         | To be selected deliberately during implementation                       |
-| Messaging                   | Kafka                                                                   |
+| Messaging / event streaming | Kafka                                                                  |
+| Background jobs / work queue | BullMQ via `@nestjs/bullmq`, Redis backend in this project              |
 | Cache                       | Redis                                                                   |
 | Object storage              | S3                                                                      |
 | Local S3-compatible storage | MinIO                                                                   |
@@ -5140,8 +5319,9 @@ Then stop. Do not start the next milestone until the assignment has been graded,
 
 We will prefer primary documentation throughout the project, including:
 
-- NestJS documentation for microservices, Kafka, RabbitMQ, WebSockets, and application patterns.
+- NestJS documentation for microservices, Kafka, RabbitMQ, BullMQ/queues, WebSockets, and application patterns.
 - Apache Kafka documentation.
+- BullMQ official documentation, especially Queues, Workers, retries/backoff, idempotent jobs, Job Schedulers, connections, and production deployment guidance.
 - RabbitMQ documentation.
 - Kubernetes documentation.
 - Amazon EKS and AWS architecture/best-practice documentation.
