@@ -4913,8 +4913,8 @@ Perform the final architecture, reliability, security, testing, delivery, data, 
 2. Keep business ownership explicit.
 3. Make failure behavior intentional.
 4. Choose event streams, work queues, and schedulers by semantics rather than by the vague label "async."
-6. Assume duplicate asynchronous delivery.
-5. Protect every network boundary with timeouts and deliberate retry rules.
+5. Assume duplicate asynchronous delivery.
+6. Protect every network boundary with timeouts and deliberate retry rules.
 7. Prefer backward-compatible APIs, events, and migrations.
 8. Deploy immutable artifacts.
 9. Use least privilege for humans and workloads.
@@ -4925,7 +4925,6 @@ Perform the final architecture, reliability, security, testing, delivery, data, 
 14. Automate repeatable infrastructure and delivery.
 15. Record important architecture decisions.
 16. Make the system understandable to engineers who did not build it.
-
 # Final Teaching Objective
 
 At completion, the learner should be able to explain—not merely demonstrate that a technology was used:
