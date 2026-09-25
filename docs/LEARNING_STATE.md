@@ -44,7 +44,9 @@
 - service contracts should expose stable business capabilities/semantics rather than mirror private database rows;
 - a consumer should not reinterpret another service's internal status codes or business rules;
 - internal schema changes should not require consumer changes when the external contract remains compatible;
-- Payment can communicate refund outcome, but Enrollment remains responsible for deciding and applying course-access changes.
+- Payment can communicate refund outcome, but Enrollment remains responsible for deciding and applying course-access changes;
+- a service interaction is synchronous when the caller's current operation cannot complete until a required dependency responds;
+- a slow required synchronous dependency increases the caller's end-to-end latency because the caller is waiting for that dependency's result.
 
 ## Partially Understands
 
@@ -52,7 +54,8 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- synchronous vs asynchronous communication has only been introduced conceptually and is the next area to develop.
+- asynchronous communication is the next formal section and has not been started for checkpoint purposes;
+- sync-vs-async decision-making remains to be developed in section 0.13.
 
 ## Needs Reinforcement
 
@@ -94,7 +97,9 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - explained that Payment should use an explicit service contract rather than directly SELECT from Enrollment's private database, citing ownership and schema-coupling consequences;
 - identified a contract that exposed entire Course/Payment internal rows as over-coupled and recognized leaked business-rule interpretation;
 - designed smaller business-oriented contracts and explained why internal database-column changes should not affect consumers;
-- correctly reasoned that Payment should not directly revoke Enrollment-owned access after a refund.
+- correctly reasoned that Payment should not directly revoke Enrollment-owned access after a refund;
+- identified Enrollment -> Course as synchronous when Enrollment cannot answer until Course replies;
+- explained that if Course becomes slow, Enrollment and therefore the student's overall request become slower because the dependency's latency contributes to end-to-end latency.
 
 ## Assignment History
 
@@ -110,9 +115,9 @@ No active milestone assignment yet.
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.10 are complete as curriculum sections**.
+Sections **0.1 through 0.11 are complete as curriculum sections**.
 
-The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes.
+The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency.
 
 ## Teaching Approach Requirement
 
@@ -120,11 +125,11 @@ For architecture/design topics, continue showing the reasoning path explicitly: 
 
 ## Next Teaching Step
 
-A new chat should resume directly at **0.11 — Synchronous communication**. Do not repeat 0.10 unless review is requested.
+A new chat should begin directly at **0.12 — Asynchronous communication**. Do not repeat 0.11 unless review is requested.
 
-Begin **0.11 — Synchronous communication**.
+**0.12 has NOT been started for checkpoint purposes. Begin it from the start in the new chat.**
 
-Start from the engineering problem: when a caller needs an answer before it can continue, explain request/response coupling, availability dependency, latency, timeouts, and failure propagation before introducing concrete HTTP implementation details.
+Start from the engineering problem: a core business operation may succeed even when secondary downstream work (for example notifications, analytics, or search indexing) does not need to finish immediately. Build the mental model of sender -> durable message mechanism -> receiver before introducing Kafka-specific internals.
 
 ## Session Update Rule
 
