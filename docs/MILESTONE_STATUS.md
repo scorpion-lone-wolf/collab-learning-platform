@@ -38,6 +38,7 @@ No application/service implementation has started yet.
 - 0.9 — Data ownership and database-per-service;
 - 0.10 — Service contracts;
 - 0.11 — Synchronous communication;
+- 0.12 — Asynchronous communication;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -54,7 +55,6 @@ No application/service implementation has started yet.
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.12 — Asynchronous communication;
 - 0.13 — Sync vs async decision-making;
 - 0.14 — First Collaborative Learning Platform HLD;
 - 0.15 — Service responsibility map;
@@ -92,7 +92,14 @@ Learner correctly reasoned that:
 - Payment should not directly query Enrollment's database for access state because doing so violates ownership and couples Payment to Enrollment's internal schema;
 - an Enrollment schema/field change should remain an Enrollment implementation detail rather than forcing Payment changes through direct database coupling;
 - Enrollment -> Course is a synchronous dependency when Enrollment cannot finish the current student request until Course replies;
-- a slow required synchronous dependency contributes directly to the caller's end-to-end latency because the caller is waiting for that result.
+- a slow required synchronous dependency contributes directly to the caller's end-to-end latency because the caller is waiting for that result;
+- a core business state change such as lesson completion should not fail merely because a secondary notification cannot be delivered immediately;
+- asynchronous communication allows a sender to continue without waiting for downstream processing when the business does not require an immediate downstream result;
+- a durable messaging mechanism can preserve work while a receiver is temporarily unavailable, reducing temporal coupling between sender and receiver;
+- asynchronous processing can create an inconsistency window in which the authoritative service has the new state while a derived downstream view has not caught up yet;
+- Course can remain the authoritative source of published-course truth while Search temporarily lags and converges later;
+- eventual consistency is a business tradeoff, not a blanket rule: payment-success/enrollment-pending creates materially higher user/business risk than temporary search-index lag;
+- user-facing workflow states should describe what has actually happened (for example, payment received / access activation pending) rather than falsely claiming the whole purchase is complete.
 
 ## Current Milestone Completion Gate
 
@@ -109,7 +116,7 @@ Learner correctly reasoned that:
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.11 are complete as curriculum sections**.
+Sections **0.1 through 0.12 are complete as curriculum sections**.
 
 The 0.9 understanding check was completed successfully: the learner separated current Course price, historical Payment charge amount, and Enrollment access state into their authoritative owners, and explained why direct cross-service database access creates ownership and schema coupling.
 
@@ -117,15 +124,17 @@ The 0.10 understanding checks were completed successfully: the learner explained
 
 The 0.11 understanding check was completed successfully: the learner explained that Enrollment -> Course is synchronous because Enrollment cannot complete the current request until Course responds, and correctly traced how a slow Course dependency increases the student's end-to-end latency through the waiting caller.
 
+The 0.12 understanding checks were completed successfully: the learner separated a core state change from secondary downstream work, explained the purpose of durable messaging and reduced temporal coupling, traced a Search outage without incorrectly failing Course publication, identified the resulting eventual-consistency window, and recognized that payment-success/enrollment-pending has a higher business impact that requires explicit user-facing intermediate state and bounded recovery expectations.
+
 No implementation work has been performed, and Milestone 0 remains in progress.
 
-**0.12 — Asynchronous communication has NOT been started for checkpoint purposes.** A new chat/session should begin 0.12 from the start. Do not repeat 0.11 unless the learner asks for review.
+**Next teaching section: 0.13 — Sync vs async decision-making.** A new chat/session should begin 0.13 from the start. Do not repeat 0.12 unless the learner asks for review.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-After sections 0.12–0.13 are completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+After section 0.13 is completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
