@@ -46,7 +46,16 @@
 - internal schema changes should not require consumer changes when the external contract remains compatible;
 - Payment can communicate refund outcome, but Enrollment remains responsible for deciding and applying course-access changes;
 - a service interaction is synchronous when the caller's current operation cannot complete until a required dependency responds;
-- a slow required synchronous dependency increases the caller's end-to-end latency because the caller is waiting for that dependency's result.
+- a slow required synchronous dependency increases the caller's end-to-end latency because the caller is waiting for that dependency's result;
+- asynchronous communication allows a sender to continue without waiting for the receiver to complete when the current business operation does not require that immediate result;
+- durable messaging can preserve a message while a consumer/receiver is temporarily unavailable;
+- asynchronous messaging reduces temporal coupling because producer and consumer do not have to be available at the same time;
+- asynchronous communication does not remove failure; it changes the failure boundary and introduces messaging, delayed-processing, retry, duplicate-processing, and operational concerns;
+- eventual consistency means related representations may temporarily disagree and later converge when downstream processing completes;
+- the authoritative service remains the source of truth while a derived downstream view may temporarily lag;
+- the acceptable inconsistency window is a business/operational decision and depends on impact;
+- search-index lag is generally lower impact than a paid learner waiting for enrollment/access;
+- distributed user-facing workflows should expose honest intermediate states such as payment received / access activation pending rather than claiming completion before all required business outcomes have occurred.
 
 ## Partially Understands
 
@@ -54,7 +63,6 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- asynchronous communication is the next formal section and has not been started for checkpoint purposes;
 - sync-vs-async decision-making remains to be developed in section 0.13.
 
 ## Needs Reinforcement
@@ -99,7 +107,14 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - designed smaller business-oriented contracts and explained why internal database-column changes should not affect consumers;
 - correctly reasoned that Payment should not directly revoke Enrollment-owned access after a refund;
 - identified Enrollment -> Course as synchronous when Enrollment cannot answer until Course replies;
-- explained that if Course becomes slow, Enrollment and therefore the student's overall request become slower because the dependency's latency contributes to end-to-end latency.
+- explained that if Course becomes slow, Enrollment and therefore the student's overall request become slower because the dependency's latency contributes to end-to-end latency;
+- correctly kept Lesson completion successful even when achievement-email delivery is unavailable, because Learning Progress owns the core state change;
+- explained that a durable messaging mechanism can retain work while a downstream receiver is unavailable and allow the sender to continue;
+- distinguished synchronous waiting from asynchronous sender/receiver decoupling;
+- correctly reasoned that Course publication can succeed while Search is down when the business tolerates delayed discoverability;
+- identified the temporary disagreement between Course state and Search state as eventual consistency and explained that Search later catches up;
+- identified payment-success/enrollment-pending as eventual consistency with higher business impact because a learner may have paid without receiving access;
+- proposed an explicit pending-access user experience after payment rather than pretending the full purchase workflow has already completed.
 
 ## Assignment History
 
@@ -116,9 +131,9 @@ No active milestone assignment yet.
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.11 are complete as curriculum sections**.
+Sections **0.1 through 0.12 are complete as curriculum sections**.
 
-The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency.
+The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency. In 0.12, the learner correctly explained asynchronous sender/receiver decoupling, durable messaging, temporal coupling reduction, eventual consistency, authoritative-vs-derived state, and the difference in business impact between delayed Search indexing and delayed Enrollment after payment.
 
 ## Teaching Approach Requirement
 
@@ -126,11 +141,11 @@ For architecture/design topics, continue showing the reasoning path explicitly: 
 
 ## Next Teaching Step
 
-A new chat should begin directly at **0.12 — Asynchronous communication**. Do not repeat 0.11 unless review is requested.
+A new chat should begin directly at **0.13 — Sync vs async decision-making**. Do not repeat 0.12 unless review is requested.
 
-**0.12 has NOT been started for checkpoint purposes. Begin it from the start in the new chat.**
+**0.12 is complete. Begin 0.13 from the start in the new chat.**
 
-Start from the engineering problem: a core business operation may succeed even when secondary downstream work (for example notifications, analytics, or search indexing) does not need to finish immediately. Build the mental model of sender -> durable message mechanism -> receiver before introducing Kafka-specific internals.
+Start with concrete Collaborative Learning Platform interactions and decide whether each requires an immediate result or can safely be processed later. Make the reasoning explicit using business dependency, acceptable inconsistency window, failure coupling, latency, user experience, and recovery requirements. Do not reduce the decision to "important = sync" or "background = async."
 
 ## Session Update Rule
 
