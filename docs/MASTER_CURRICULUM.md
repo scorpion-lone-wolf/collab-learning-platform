@@ -1835,6 +1835,17 @@ This is intentionally kept separate from generic file processing (antivirus scan
 
 ## 6.10 Search Service
 
+Before introducing OpenSearch or a standalone Search Service, the mentor must first teach the progression from ordinary application/database search to specialized search architecture:
+
+- what "normal search" looks like when the Course Service queries PostgreSQL directly;
+- when PostgreSQL search is sufficient and a separate Search Service would be unnecessary complexity;
+- what requirements begin to strain that simpler approach, such as richer full-text relevance, analyzers, autocomplete, complex filtering, independent search scaling, denormalized searchable documents, and operational reindexing;
+- what specific problem a standalone Search Service solves;
+- what new complexity the split introduces, especially duplicated/derived data, asynchronous indexing, eventual consistency, reindexing, and another service to operate;
+- why this project deliberately adopts the standalone Search Service/OpenSearch architecture for learning and production-scale search requirements rather than teaching "search always needs a microservice."
+
+Only after that problem/alternatives/tradeoff comparison should OpenSearch-specific concepts be introduced.
+
 Responsibilities:
 
 - course search;
@@ -4629,7 +4640,9 @@ Frontend video player using `hls.js`: adaptive bitrate switching based on bandwi
 
 ## Milestone 25 — Search Service
 
-OpenSearch indexing from domain events, query API, filters, eventual consistency, and the operational need for reindexing (implemented in Milestone 26).
+Begin with the engineering problem and alternatives before introducing OpenSearch: implement/trace the mental model of ordinary Course Service + PostgreSQL search, explain where it is sufficient, then identify the concrete requirements that can justify a standalone Search Service. Explicitly compare the simple database-search approach with a separate derived search read model, including benefits, operational cost, failure modes, and eventual-consistency tradeoffs. The learner must be able to explain **why** this project uses a standalone Search Service and when they would deliberately avoid one.
+
+Then teach and implement OpenSearch indexing from domain events, query API, filters, eventual consistency, and the operational need for reindexing (implemented in Milestone 26).
 
 ## Milestone 26 — Search Reindex and Schema Evolution
 
