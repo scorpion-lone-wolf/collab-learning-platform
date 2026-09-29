@@ -128,13 +128,13 @@ The 0.12 understanding checks were completed successfully: the learner separated
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
-**Next teaching section: 0.13 — Sync vs async decision-making.** A new chat/session should begin 0.13 from the start. Do not repeat 0.12 unless the learner asks for review.
+**Current teaching section: 0.13 — Sync vs async decision-making.** The section has started. The learner correctly handled the first two decision scenarios: Payment -> Course is synchronous when Payment cannot truthfully proceed without the authoritative amount, while Progress -> Notification should be asynchronous because notification delivery is not required for the progress state change to succeed. Resume 0.13 from the next decision rule; do not restart the section.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-After section 0.13 is completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+Continue section **0.13 — Sync vs async decision-making** from the next decision rule. After 0.13 is completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
