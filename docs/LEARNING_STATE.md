@@ -63,7 +63,7 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- sync-vs-async decision-making remains to be developed in section 0.13.
+- sync-vs-async decision-making is in progress in section 0.13; the learner has demonstrated the first rule about whether the current operation requires the downstream result before it can truthfully continue.
 
 ## Needs Reinforcement
 
@@ -141,11 +141,11 @@ For architecture/design topics, continue showing the reasoning path explicitly: 
 
 ## Next Teaching Step
 
-A new chat should begin directly at **0.13 — Sync vs async decision-making**. Do not repeat 0.12 unless review is requested.
+Resume directly inside **0.13 — Sync vs async decision-making**; do not restart the section.
 
-**0.12 is complete. Begin 0.13 from the start in the new chat.**
+The learner already demonstrated the first decision rule using two scenarios: (1) Payment -> Course is synchronous when Payment cannot proceed without the authoritative amount to charge; (2) Progress -> Notification should be asynchronous because notification delivery is secondary to the completed progress state and should not make progress tracking fail.
 
-Start with concrete Collaborative Learning Platform interactions and decide whether each requires an immediate result or can safely be processed later. Make the reasoning explicit using business dependency, acceptable inconsistency window, failure coupling, latency, user experience, and recovery requirements. Do not reduce the decision to "important = sync" or "background = async."
+**Next teaching step:** continue 0.13 with the next decision rule, expanding the framework beyond immediate business dependency into acceptable inconsistency window, failure coupling, latency, user experience, and recovery requirements. Do not reduce the decision to "important = sync" or "background = async."
 
 ## Session Update Rule
 
