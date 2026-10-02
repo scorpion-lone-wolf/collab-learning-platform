@@ -39,6 +39,7 @@ No application/service implementation has started yet.
 - 0.10 — Service contracts;
 - 0.11 — Synchronous communication;
 - 0.12 — Asynchronous communication;
+- 0.13 — Sync vs async decision-making;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -115,7 +116,7 @@ Learner correctly reasoned that:
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.12 are complete as curriculum sections**.
+Sections **0.1 through 0.13 are complete as curriculum sections**.
 
 The 0.9 understanding check was completed successfully: the learner separated current Course price, historical Payment charge amount, and Enrollment access state into their authoritative owners, and explained why direct cross-service database access creates ownership and schema coupling.
 
