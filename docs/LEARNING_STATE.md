@@ -63,7 +63,7 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- sync-vs-async decision-making is in progress in section 0.13; the learner has demonstrated the first rule about whether the current operation requires the downstream result before it can truthfully continue.
+- sync-vs-async decision-making using immediate business dependency, acceptable inconsistency windows, failure coupling, latency coupling, user-visible intermediate states, and recovery/compensation requirements.
 
 ## Needs Reinforcement
 
@@ -115,6 +115,7 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - identified the temporary disagreement between Course state and Search state as eventual consistency and explained that Search later catches up;
 - identified payment-success/enrollment-pending as eventual consistency with higher business impact because a learner may have paid without receiving access;
 - proposed an explicit pending-access user experience after payment rather than pretending the full purchase workflow has already completed.
+- completed the 0.13 final reasoning check: kept Payment success separate from Enrollment completion, chose an honest pending-access UI state, described later Enrollment recovery, and identified compensation/refund for an unrecoverable enrollment failure.
 
 ## Assignment History
 
@@ -141,11 +142,9 @@ For architecture/design topics, continue showing the reasoning path explicitly: 
 
 ## Next Teaching Step
 
-Resume directly inside **0.13 — Sync vs async decision-making**; do not restart the section.
+**Section 0.13 — Sync vs async decision-making is complete.** The learner demonstrated that: Payment can complete its own payment state and publish `PaymentSucceeded` without waiting synchronously for Enrollment; the UI must show an honest intermediate state such as payment received / access activation pending; Enrollment should process the durable event when it recovers; and a permanently failed enrollment may require compensation such as a refund and reversal of other dependent state changes.
 
-The learner already demonstrated the first decision rule using two scenarios: (1) Payment -> Course is synchronous when Payment cannot proceed without the authoritative amount to charge; (2) Progress -> Notification should be asynchronous because notification delivery is secondary to the completed progress state and should not make progress tracking fail.
-
-**Next teaching step:** continue 0.13 with the next decision rule, expanding the framework beyond immediate business dependency into acceptable inconsistency window, failure coupling, latency, user experience, and recovery requirements. Do not reduce the decision to "important = sync" or "background = async."
+**Next Teaching Step:** begin **0.14 — First Collaborative Learning Platform HLD**. Start by turning the boundaries and sync/async rules learned so far into the first system-level diagram: client/edge, core services, owned data, and the major synchronous vs asynchronous paths. Explain each box and arrow before adding the next one.
 
 ## Session Update Rule
 
