@@ -55,7 +55,6 @@ No application/service implementation has started yet.
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.13 — Sync vs async decision-making;
 - 0.14 — First Collaborative Learning Platform HLD;
 - 0.15 — Service responsibility map;
 - 0.16 — First Architecture Decision Records;
@@ -128,13 +127,13 @@ The 0.12 understanding checks were completed successfully: the learner separated
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
-**Current teaching section: 0.13 — Sync vs async decision-making.** The section has started. The learner correctly handled the first two decision scenarios: Payment -> Course is synchronous when Payment cannot truthfully proceed without the authoritative amount, while Progress -> Notification should be asynchronous because notification delivery is not required for the progress state change to succeed. Resume 0.13 from the next decision rule; do not restart the section.
+**Section 0.13 — Sync vs async decision-making is complete.** The learner demonstrated the full decision framework: immediate business dependency, acceptable inconsistency window, failure coupling, latency coupling, honest intermediate user states, and recovery/compensation requirements. The next teaching section is **0.14 — First Collaborative Learning Platform HLD**.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-Continue section **0.13 — Sync vs async decision-making** from the next decision rule. After 0.13 is completed, draft the **first system architecture diagram and service responsibility map** in sections 0.14–0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+Begin **0.14 — First Collaborative Learning Platform HLD** by drafting the first system architecture diagram and identifying the major service boundaries and communication paths. Then continue to the service responsibility map in 0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
