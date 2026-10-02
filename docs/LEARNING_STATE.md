@@ -56,6 +56,7 @@
 - the acceptable inconsistency window is a business/operational decision and depends on impact;
 - search-index lag is generally lower impact than a paid learner waiting for enrollment/access;
 - distributed user-facing workflows should expose honest intermediate states such as payment received / access activation pending rather than claiming completion before all required business outcomes have occurred.
+- sync-vs-async decisions should be made from business dependency, acceptable inconsistency window, failure coupling, latency coupling, user-visible intermediate states, and recovery/compensation requirements rather than simplistic rules such as "important = sync" or "background = async".
 
 ## Partially Understands
 
@@ -63,7 +64,6 @@
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
 - turning bounded-context reasoning into a service responsibility map across a whole domain;
-- sync-vs-async decision-making using immediate business dependency, acceptable inconsistency windows, failure coupling, latency coupling, user-visible intermediate states, and recovery/compensation requirements.
 
 ## Needs Reinforcement
 
@@ -73,7 +73,6 @@
 - using business rules, language, cohesion, and reasons-to-change to justify boundaries;
 - deciding whether a boundary is only a logical/module boundary or may justify a separate service boundary;
 - deeper database-per-service tradeoffs as they appear in later distributed workflows;
-- synchronous vs asynchronous communication tradeoffs.
 
 These are reinforcement areas, not blockers for the next curriculum section.
 
@@ -132,9 +131,9 @@ No active milestone assignment yet.
 
 ## Current Checkpoint
 
-Sections **0.1 through 0.12 are complete as curriculum sections**.
+Sections **0.1 through 0.13 are complete as curriculum sections**.
 
-The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency. In 0.12, the learner correctly explained asynchronous sender/receiver decoupling, durable messaging, temporal coupling reduction, eventual consistency, authoritative-vs-derived state, and the difference in business impact between delayed Search indexing and delayed Enrollment after payment.
+The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency. In 0.12, the learner correctly explained asynchronous sender/receiver decoupling, durable messaging, temporal coupling reduction, eventual consistency, authoritative-vs-derived state, and the difference in business impact between delayed Search indexing and delayed Enrollment after payment. In 0.13, the learner correctly applied a six-part sync-vs-async decision framework covering immediate business dependency, acceptable inconsistency windows, failure coupling, latency coupling, honest intermediate UX states, and recovery/compensation requirements.
 
 ## Teaching Approach Requirement
 
