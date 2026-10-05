@@ -115,6 +115,7 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - identified payment-success/enrollment-pending as eventual consistency with higher business impact because a learner may have paid without receiving access;
 - proposed an explicit pending-access user experience after payment rather than pretending the full purchase workflow has already completed.
 - completed the 0.13 final reasoning check: kept Payment success separate from Enrollment completion, chose an honest pending-access UI state, described later Enrollment recovery, and identified compensation/refund for an unrecoverable enrollment failure.
+- completed the first 0.14 HLD request-flow check: Browser -> API Gateway -> Course Service; identified Course Service as the authoritative owner of current course information; and correctly justified the interaction as synchronous because the browser must wait for the course data needed for the current page.
 
 ## Assignment History
 
@@ -135,16 +136,44 @@ Sections **0.1 through 0.13 are complete as curriculum sections**.
 
 The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency. In 0.12, the learner correctly explained asynchronous sender/receiver decoupling, durable messaging, temporal coupling reduction, eventual consistency, authoritative-vs-derived state, and the difference in business impact between delayed Search indexing and delayed Enrollment after payment. In 0.13, the learner correctly applied a six-part sync-vs-async decision framework covering immediate business dependency, acceptable inconsistency windows, failure coupling, latency coupling, honest intermediate UX states, and recovery/compensation requirements.
 
+Section 0.14 has started. The learner correctly traced the first course-page HLD request path and justified why that request is synchronous. Continue 0.14 one concept at a time rather than presenting the complete architecture in one pass.
+
 ## Teaching Approach Requirement
 
 For architecture/design topics, continue showing the reasoning path explicitly: raw problem -> actors/actions -> business question -> rules/data -> consistency needs -> authoritative owner -> alternatives -> boundary choice -> named context/service -> transfer to a new example.
 
+### Learner-specific depth-first teaching rules — HARD REQUIREMENT
+
+These rules apply to every remaining milestone and every technology/concept taught in this project:
+
+1. Teach **one concept at a time**. Do not introduce the next concept until the learner has answered the understanding questions and explicitly says `next`.
+2. Prefer **in-depth teaching over high-level coverage**. A high-level sentence may be used only as orientation; it must never replace the detailed explanation needed to understand the concept.
+3. Do not skip an important detail because it appears obvious, basic, or implied. The learner is studying the stack from scratch.
+4. Before using a technical word that has not already been taught, explain that word in simple English first. Examples include terms such as entitlement, boundary, edge, backbone, routing, source of truth, idempotency, worker, queue, and similar vocabulary.
+5. For each concept, teach in this structure:
+   - **The problem** — what goes wrong or becomes difficult without the concept;
+   - **The solution** — what the concept is and exactly what it does;
+   - **Simple real-life example / analogy**;
+   - **What goes wrong if we do it the other way**;
+   - **Key points for notes**;
+   - **One-line summary**.
+6. Use short sentences and simple English, but do not reduce technical depth.
+7. Explain **why** each design or implementation choice exists, not only what it is.
+8. When connecting to an earlier concept, give a one-line reminder instead of assuming the learner remembers it.
+9. Where relevant, continue past the definition into runtime behavior, failure behavior, alternatives, tradeoffs, production implications, and how the concept applies to this Collaborative Learning Platform.
+10. End each concept with a few understanding questions. Wait for the learner's answer before continuing.
+11. If the learner's answer reveals a gap, re-explain that exact gap before moving on.
+12. Do not use response length as a reason to compress multiple concepts together. A concept may span several messages if needed.
+13. Never treat a broad architecture diagram or summary as proof that the underlying components are understood. Explain each important box, arrow, dependency, and technical term separately before relying on it.
+
+**Depth-over-breadth rule:** when forced to choose between covering more topics quickly and teaching the current concept thoroughly, choose thorough understanding of the current concept.
+
 ## Next Teaching Step
 
-**Section 0.13 — Sync vs async decision-making is complete.** The learner demonstrated that: Payment can complete its own payment state and publish `PaymentSucceeded` without waiting synchronously for Enrollment; the UI must show an honest intermediate state such as payment received / access activation pending; Enrollment should process the durable event when it recovers; and a permanently failed enrollment may require compensation such as a refund and reversal of other dependent state changes.
+**Section 0.14 — First Collaborative Learning Platform HLD is IN PROGRESS.** The first request-flow check is complete: Browser -> API Gateway -> Course Service, with the learner correctly identifying the synchronous dependency and Course ownership.
 
-**Next Teaching Step:** begin **0.14 — First Collaborative Learning Platform HLD**. Start by turning the boundaries and sync/async rules learned so far into the first system-level diagram: client/edge, core services, owned data, and the major synchronous vs asynchronous paths. Explain each box and arrow before adding the next one.
+**Next Teaching Step:** continue 0.14 with exactly one HLD concept at a time under the learner-specific depth-first teaching rules above. Do not dump the remaining services or complete architecture. Explain the next single box/arrow/problem in depth, check understanding, and wait for `next`.
 
 ## Session Update Rule
 
-At the end of every substantial learning session, update this file with newly demonstrated understanding, partial understanding, weak areas/misconceptions, completed checks/assignments, deferred topics, and one precise **Next Teaching Step**.
+At the end of every substantial learning/building session, update this file with newly demonstrated understanding, partial understanding, weak areas/misconceptions, completed checks/assignments, deferred topics, and one precise **Next Teaching Step**.
