@@ -40,6 +40,10 @@ No application/service implementation has started yet.
 - 0.11 — Synchronous communication;
 - 0.12 — Asynchronous communication;
 - 0.13 — Sync vs async decision-making;
+- 0.14 — First Collaborative Learning Platform HLD is IN PROGRESS;
+- within 0.14, the first Browser -> API Gateway -> Course Service request path has been reasoned and checked;
+- within 0.14, API Gateway purpose/routing/business-logic boundary/availability tradeoff has been taught and checked;
+- within 0.14, Auth Service identity/authentication ownership and Auth-vs-User/Profile boundary has been taught and checked;
 - module boundary vs runtime/deployment boundary;
 - ownership and coupling basics;
 - failure propagation / blast-radius basics;
@@ -56,7 +60,7 @@ No application/service implementation has started yet.
 
 Continue the established Milestone 0 lesson sequence exactly:
 
-- 0.14 — First Collaborative Learning Platform HLD;
+- finish 0.14 — First Collaborative Learning Platform HLD one HLD concept at a time under the depth-first teaching rule;
 - 0.15 — Service responsibility map;
 - 0.16 — First Architecture Decision Records;
 - 0.17 — Failure and operational thinking;
@@ -99,7 +103,17 @@ Learner correctly reasoned that:
 - asynchronous processing can create an inconsistency window in which the authoritative service has the new state while a derived downstream view has not caught up yet;
 - Course can remain the authoritative source of published-course truth while Search temporarily lags and converges later;
 - eventual consistency is a business tradeoff, not a blanket rule: payment-success/enrollment-pending creates materially higher user/business risk than temporary search-index lag;
-- user-facing workflow states should describe what has actually happened (for example, payment received / access activation pending) rather than falsely claiming the whole purchase is complete.
+- user-facing workflow states should describe what has actually happened (for example, payment received / access activation pending) rather than falsely claiming the whole purchase is complete;
+- the browser can use the API Gateway as one controlled public backend entry point rather than knowing all internal service endpoints;
+- routing decides which downstream service should receive a request while the domain service owns the business rules and result;
+- putting service-owned business rules in both Gateway and service creates duplication, inconsistency, coupling, and unnecessary coordinated deployments;
+- a Gateway outage can block the browser's normal access path even when downstream services are healthy;
+- Course or another domain service needing caller identity does not make it an owner of password verification/authentication;
+- Auth should own authentication/security concerns while User/Profile owns profile concerns;
+- a single frontend registration screen does not prove that email/password/display-name must have one backend owner;
+- duplicated password-validation rules between Gateway and Auth create inconsistent authentication behavior.
+
+Important clarification to preserve: when a downstream service reads caller identity from request context, that identity must already have been established by trusted authentication logic. A raw client-supplied `userId` is not proof of identity.
 
 ## Current Milestone Completion Gate
 
@@ -118,23 +132,27 @@ Learner correctly reasoned that:
 
 Sections **0.1 through 0.13 are complete as curriculum sections**.
 
-The 0.9 understanding check was completed successfully: the learner separated current Course price, historical Payment charge amount, and Enrollment access state into their authoritative owners, and explained why direct cross-service database access creates ownership and schema coupling.
+Section **0.14 — First Collaborative Learning Platform HLD is IN PROGRESS**.
 
-The 0.10 understanding checks were completed successfully: the learner explained why a service contract should expose a stable business capability rather than internal persistence fields, identified leaked cross-service business-rule interpretation, distinguished internal implementation changes from contract changes, and correctly kept refund/access ownership separated between Payment and Enrollment.
+Verified 0.14 concepts so far:
 
-The 0.11 understanding check was completed successfully: the learner explained that Enrollment -> Course is synchronous because Enrollment cannot complete the current request until Course responds, and correctly traced how a slow Course dependency increases the student's end-to-end latency through the waiting caller.
+1. Browser -> API Gateway -> Course Service request path, Course ownership, and why the course-page interaction is synchronous.
+2. API Gateway: controlled public entry point, routing, reduced frontend knowledge of internal service topology, keeping domain business rules out of the Gateway, and Gateway availability tradeoff.
+3. Auth Service: identity vs authentication at HLD level, why authentication responsibility should be centralized rather than duplicated across services, Auth-vs-User/Profile separation, and why one frontend workflow does not define one backend service boundary.
 
-The 0.12 understanding checks were completed successfully: the learner separated a core state change from secondary downstream work, explained the purpose of durable messaging and reduced temporal coupling, traced a Search outage without incorrectly failing Course publication, identified the resulting eventual-consistency window, and recognized that payment-success/enrollment-pending has a higher business impact that requires explicit user-facing intermediate state and bounded recovery expectations.
+Do not treat JWT, access tokens, refresh tokens, OAuth/OIDC, or authorization as already taught. Those concepts were intentionally deferred.
 
 No implementation work has been performed, and Milestone 0 remains in progress.
-
-**Section 0.13 — Sync vs async decision-making is complete.** The learner demonstrated the full decision framework: immediate business dependency, acceptable inconsistency window, failure coupling, latency coupling, honest intermediate user states, and recovery/compensation requirements. The next teaching section is **0.14 — First Collaborative Learning Platform HLD**.
 
 ## Next Engineering Step
 
 No code/infrastructure action yet.
 
-Begin **0.14 — First Collaborative Learning Platform HLD** by drafting the first system architecture diagram and identifying the major service boundaries and communication paths. Then continue to the service responsibility map in 0.15. Do not start application coding before the Milestone 0 assignment has been evaluated.
+Continue **0.14 — First Collaborative Learning Platform HLD** under the learner-specific depth-first rule.
+
+**Exact next teaching concept:** **User Service / Profile responsibility in the HLD**. Start from the problem of mixing profile data with authentication data, remind that Auth owns authentication/security concerns, derive User Service ownership/non-ownership, use realistic ownership/failure examples, then stop for an understanding check. Do not introduce the next HLD component until the learner answers and explicitly says `next`.
+
+Do not start application coding before the Milestone 0 assignment has been evaluated.
 
 ## Session Update Rule
 
