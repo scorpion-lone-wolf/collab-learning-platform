@@ -55,8 +55,18 @@
 - the authoritative service remains the source of truth while a derived downstream view may temporarily lag;
 - the acceptable inconsistency window is a business/operational decision and depends on impact;
 - search-index lag is generally lower impact than a paid learner waiting for enrollment/access;
-- distributed user-facing workflows should expose honest intermediate states such as payment received / access activation pending rather than claiming completion before all required business outcomes have occurred.
-- sync-vs-async decisions should be made from business dependency, acceptable inconsistency window, failure coupling, latency coupling, user-visible intermediate states, and recovery/compensation requirements rather than simplistic rules such as "important = sync" or "background = async".
+- distributed user-facing workflows should expose honest intermediate states such as payment received / access activation pending rather than claiming completion before all required business outcomes have occurred;
+- sync-vs-async decisions should be made from business dependency, acceptable inconsistency window, failure coupling, latency coupling, user-visible intermediate states, and recovery/compensation requirements rather than simplistic rules such as "important = sync" or "background = async";
+- an API Gateway can provide one controlled public backend entry point so the frontend does not need to know every internal service address;
+- request routing means deciding which downstream service should receive a request, while the owning domain service remains responsible for the business response and rules;
+- service-specific business rules should not be duplicated in the API Gateway because doing so creates coupling, inconsistent rules, and unnecessary coordinated deployments;
+- an API Gateway is an important runtime dependency: if it is unavailable, the browser may be unable to reach healthy downstream services through the normal public path;
+- identity answers who a user is, while authentication is the act of proving that claimed identity;
+- Auth Service should own authentication-related capabilities and sensitive authentication state instead of duplicating password/login logic across domain services;
+- a service needing a user's identity does not make that service an owner of authentication or credentials;
+- Auth and User/Profile can represent the same human for different responsibilities: Auth owns authentication/security concerns while User owns profile concerns;
+- one frontend workflow or screen does not imply one backend service boundary; registration can involve both Auth-owned and User-owned information;
+- duplicating password-validation rules between Gateway and Auth creates inconsistent security behavior and coupling.
 
 ## Partially Understands
 
@@ -73,6 +83,7 @@
 - using business rules, language, cohesion, and reasons-to-change to justify boundaries;
 - deciding whether a boundary is only a logical/module boundary or may justify a separate service boundary;
 - deeper database-per-service tradeoffs as they appear in later distributed workflows;
+- distinguish a **trusted authenticated request context** from an arbitrary `userId` supplied by a client: Course may use an identity already established by trusted authentication logic, but must not treat raw client-provided identity data as proof of who the caller is.
 
 These are reinforcement areas, not blockers for the next curriculum section.
 
@@ -86,7 +97,9 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - clarified that microservices do not automatically guarantee failure isolation;
 - clarified that Course content ownership is distinct from learner progress ownership;
 - clarified that current course price metadata and historical amount actually charged are different business truths owned by different contexts;
-- demonstrated that another service needing data does not make it a co-owner of that data.
+- demonstrated that another service needing data does not make it a co-owner of that data;
+- clarified that business-rule ownership should be reasoned from the owning business capability, not merely from which service happens to store a related row;
+- clarified that Course may consume an already-authenticated identity from trusted request context, but must not own password verification or trust a raw client-provided user ID as authentication proof.
 
 ## Completed Understanding Checks
 
@@ -113,9 +126,11 @@ These are reinforcement areas, not blockers for the next curriculum section.
 - correctly reasoned that Course publication can succeed while Search is down when the business tolerates delayed discoverability;
 - identified the temporary disagreement between Course state and Search state as eventual consistency and explained that Search later catches up;
 - identified payment-success/enrollment-pending as eventual consistency with higher business impact because a learner may have paid without receiving access;
-- proposed an explicit pending-access user experience after payment rather than pretending the full purchase workflow has already completed.
-- completed the 0.13 final reasoning check: kept Payment success separate from Enrollment completion, chose an honest pending-access UI state, described later Enrollment recovery, and identified compensation/refund for an unrecoverable enrollment failure.
-- completed the first 0.14 HLD request-flow check: Browser -> API Gateway -> Course Service; identified Course Service as the authoritative owner of current course information; and correctly justified the interaction as synchronous because the browser must wait for the course data needed for the current page.
+- proposed an explicit pending-access user experience after payment rather than pretending the full purchase workflow has already completed;
+- completed the 0.13 final reasoning check: kept Payment success separate from Enrollment completion, chose an honest pending-access UI state, described later Enrollment recovery, and identified compensation/refund for an unrecoverable enrollment failure;
+- completed the first 0.14 HLD request-flow check: Browser -> API Gateway -> Course Service; identified Course Service as the authoritative owner of current course information; and correctly justified the interaction as synchronous because the browser must wait for the course data needed for the current page;
+- completed the 0.14 API Gateway concept check: explained frontend-to-internal-service coupling, correctly defined Gateway routing vs Course-owned response logic, rejected Course publishing rules inside the Gateway, and correctly predicted that a Gateway outage can block browser access to otherwise healthy downstream services;
+- completed the 0.14 Auth Service concept check: kept password/authentication concerns in Auth, profile information in User, explained the inconsistency/coupling created by duplicated authentication rules, and rejected using a single registration screen as evidence that one service must own all registration data.
 
 ## Assignment History
 
@@ -136,7 +151,15 @@ Sections **0.1 through 0.13 are complete as curriculum sections**.
 
 The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency. In 0.12, the learner correctly explained asynchronous sender/receiver decoupling, durable messaging, temporal coupling reduction, eventual consistency, authoritative-vs-derived state, and the difference in business impact between delayed Search indexing and delayed Enrollment after payment. In 0.13, the learner correctly applied a six-part sync-vs-async decision framework covering immediate business dependency, acceptable inconsistency windows, failure coupling, latency coupling, honest intermediate UX states, and recovery/compensation requirements.
 
-Section 0.14 has started. The learner correctly traced the first course-page HLD request path and justified why that request is synchronous. Continue 0.14 one concept at a time rather than presenting the complete architecture in one pass.
+Section **0.14 — First Collaborative Learning Platform HLD is IN PROGRESS**.
+
+Completed and demonstrated inside 0.14 so far:
+
+1. first Browser -> API Gateway -> Course Service request path and why that page-load interaction is synchronous;
+2. API Gateway as the controlled public entry point, request routing, frontend/internal-architecture decoupling, keeping service-owned business logic out of the Gateway, and the Gateway's availability tradeoff;
+3. Auth Service ownership: identity vs authentication at the current HLD level, centralized authentication responsibility, Auth-vs-User/Profile separation, and why workflow/screen shape does not define service ownership.
+
+The learner's Auth answer used "get it from the request object" as shorthand for obtaining caller identity. Preserve the important qualification in future teaching: this is valid only when trusted authentication logic has already established the identity and placed it into trusted request context; raw client-provided identity is not proof.
 
 ## Teaching Approach Requirement
 
@@ -170,9 +193,11 @@ These rules apply to every remaining milestone and every technology/concept taug
 
 ## Next Teaching Step
 
-**Section 0.14 — First Collaborative Learning Platform HLD is IN PROGRESS.** The first request-flow check is complete: Browser -> API Gateway -> Course Service, with the learner correctly identifying the synchronous dependency and Course ownership.
+**Section 0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS.** API Gateway and Auth Service have now passed their concept checks.
 
-**Next Teaching Step:** continue 0.14 with exactly one HLD concept at a time under the learner-specific depth-first teaching rules above. Do not dump the remaining services or complete architecture. Explain the next single box/arrow/problem in depth, check understanding, and wait for `next`.
+**Exact next teaching step for the next chat:** teach **User Service / Profile responsibility in the HLD** as one concept only. Start from the problem of mixing profile data with authentication data, remind the learner in one line that Auth owns authentication/security concerns, then derive what User Service owns and does not own. Explain the boundary in depth, include realistic failure/ownership examples, end with understanding questions, and wait for the learner to answer and say `next` before moving to another HLD component.
+
+Do **not** assume JWT, access tokens, refresh tokens, OAuth/OIDC, or authorization have been taught. They were intentionally deferred and should not be used as unexplained prerequisites.
 
 ## Session Update Rule
 
