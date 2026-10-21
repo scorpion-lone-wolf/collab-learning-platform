@@ -19,118 +19,104 @@
 
 ## Understands
 
-- a monolith can contain multiple clean internal modules and still be one deployment/runtime unit;
-- a modular monolith uses explicit internal ownership/boundaries without becoming multiple services;
-- a microservice boundary is stronger than a module boundary because it introduces an independent runtime/deployment boundary;
-- modular monoliths cannot independently scale one internal module without scaling the whole application;
-- microservices introduce network uncertainty, partial failure, distributed state, compatibility, debugging, testing, operational, and security complexity;
-- a timeout means the caller did not receive a result in time, not that the remote business operation definitely failed;
-- blind retries can duplicate business side effects such as charging a learner twice;
-- business data should be modified by the capability/module/service that owns it;
-- Payment directly mutating Enrollment data is tight data-ownership coupling;
-- a long required service call chain such as Auth -> Course -> Payment creates request/runtime coupling;
-- tightly coupled failures can increase blast radius;
-- a successful core business operation should not necessarily fail because a non-critical notification dependency fails;
-- service boundaries should be reasoned from business capabilities rather than tables or technical layers;
-- high business cohesion is a stronger reason to group responsibilities than merely sharing nouns/entities;
-- a bounded context groups business concepts, rules, data ownership, and language with one clear responsibility;
+The learner has demonstrated understanding of:
+
+- monolith vs modular monolith vs microservice runtime/deployment boundaries;
+- why microservices add network uncertainty, partial failure, distributed-state, compatibility, debugging, testing, operational, and security complexity;
+- business-capability boundaries and bounded-context reasoning;
+- business ownership should follow source of truth, business rules, cohesion, and reasons to change rather than tables/entities alone;
 - the same real-world person/course can appear in multiple bounded contexts with different meanings;
-- Course Management, Payment, Enrollment, Auth/Profile, and Learning Progress own different business truths even when they participate in the same workflow;
-- Course owns course configuration/publishing and current-price truth, Payment owns financial transaction/refund and historical-charge truth, Enrollment owns course-entitlement truth, and Learning Progress owns learner-completion truth;
-- database-per-service is primarily an ownership/access boundary and does not require a separate physical database server for every service;
-- a service should not directly read or modify another service's private database;
-- direct cross-service database access couples consumers to the owning service's internal schema and weakens independent evolution/deployment;
-- when another service needs owned information, it should obtain it through an explicit service contract rather than bypassing the owner;
-- service contracts should expose stable business capabilities/semantics rather than mirror private database rows;
-- a consumer should not reinterpret another service's internal status codes or business rules;
-- internal schema changes should not require consumer changes when the external contract remains compatible;
-- Payment can communicate refund outcome, but Enrollment remains responsible for deciding and applying course-access changes;
-- a service interaction is synchronous when the caller's current operation cannot complete until a required dependency responds;
-- a slow required synchronous dependency increases the caller's end-to-end latency because the caller is waiting for that dependency's result;
-- asynchronous communication allows a sender to continue without waiting for the receiver to complete when the current business operation does not require that immediate result;
-- durable messaging can preserve a message while a consumer/receiver is temporarily unavailable;
-- asynchronous messaging reduces temporal coupling because producer and consumer do not have to be available at the same time;
-- asynchronous communication does not remove failure; it changes the failure boundary and introduces messaging, delayed-processing, retry, duplicate-processing, and operational concerns;
-- eventual consistency means related representations may temporarily disagree and later converge when downstream processing completes;
-- the authoritative service remains the source of truth while a derived downstream view may temporarily lag;
-- the acceptable inconsistency window is a business/operational decision and depends on impact;
-- search-index lag is generally lower impact than a paid learner waiting for enrollment/access;
-- distributed user-facing workflows should expose honest intermediate states such as payment received / access activation pending rather than claiming completion before all required business outcomes have occurred;
-- sync-vs-async decisions should be made from business dependency, acceptable inconsistency window, failure coupling, latency coupling, user-visible intermediate states, and recovery/compensation requirements rather than simplistic rules such as "important = sync" or "background = async";
-- an API Gateway can provide one controlled public backend entry point so the frontend does not need to know every internal service address;
-- request routing means deciding which downstream service should receive a request, while the owning domain service remains responsible for the business response and rules;
-- service-specific business rules should not be duplicated in the API Gateway because doing so creates coupling, inconsistent rules, and unnecessary coordinated deployments;
-- an API Gateway is an important runtime dependency: if it is unavailable, the browser may be unable to reach healthy downstream services through the normal public path;
-- identity answers who a user is, while authentication is the act of proving that claimed identity;
-- Auth Service should own authentication-related capabilities and sensitive authentication state instead of duplicating password/login logic across domain services;
-- a service needing a user's identity does not make that service an owner of authentication or credentials;
-- Auth and User/Profile can represent the same human for different responsibilities: Auth owns authentication/security concerns while User owns profile concerns;
-- one frontend workflow or screen does not imply one backend service boundary; registration can involve both Auth-owned and User-owned information;
-- duplicating password-validation rules between Gateway and Auth creates inconsistent security behavior and coupling.
+- database-per-service as an ownership/access boundary, not necessarily one physical server per service;
+- direct cross-service database access creates schema and ownership coupling;
+- consumers should use explicit contracts instead of another service's private database or internal statuses;
+- synchronous communication means the caller's current operation waits for a required dependency;
+- slow synchronous dependencies increase end-to-end request latency;
+- asynchronous communication reduces temporal coupling when the current business operation does not require an immediate downstream result;
+- durable messaging can preserve work while a consumer is unavailable;
+- asynchronous processing can create an eventual-consistency window;
+- authoritative state and derived state may temporarily disagree and later converge;
+- acceptable inconsistency depends on business impact;
+- payment-success/enrollment-pending is more sensitive than temporary Search lag;
+- distributed user-facing workflows should expose truthful intermediate states;
+- API Gateway can provide one controlled public backend entry point and route requests without owning domain business rules;
+- Gateway availability is itself an important runtime dependency;
+- identity vs authentication at HLD level;
+- Auth Service owns authentication/security concerns rather than profile or unrelated business state;
+- User/Profile and Auth can represent the same human for different responsibilities;
+- one frontend workflow/screen can involve multiple backend owners;
+- duplicating password/authentication rules across Gateway/Auth creates inconsistent security behavior and coupling;
+- User Service owns profile information such as display name, bio, preferences, and similar product-facing user information;
+- login email should not be independently authoritative in both Auth and User without an explicit different business meaning;
+- data being "about a user" does not automatically make it User Service data;
+- a raw client-provided `userId` is a claim, not proof of identity;
+- downstream services may rely on caller identity only after trusted authentication logic has established it;
+- Course Service owns course-management truth: course definition, modules, lessons, publishing state, instructor ownership, current course metadata, and current configured price;
+- Payment owns historical amount actually charged, even when the current course price later changes;
+- Enrollment owns enrollment/access state;
+- Learning Progress owns learner completion/progress state;
+- Search can contain a derived searchable representation while Course remains the authoritative owner;
+- if Course is published while Search is stale, the course is still published but temporarily not searchable;
+- Search catching up later is eventual consistency, not a switch from asynchronous to synchronous communication.
 
 ## Partially Understands
 
 - independently discovering bounded contexts from an unfamiliar domain without relying on memorized examples;
 - articulating the precise business question a context answers;
 - explaining why one responsibility belongs inside a context and another does not;
-- turning bounded-context reasoning into a service responsibility map across a whole domain;
+- turning bounded-context reasoning into a complete service responsibility map across a whole domain;
+- deciding whether a logical/module boundary justifies a separate runtime/deployment boundary.
 
 ## Needs Reinforcement
 
 - cross-domain bounded-context discovery using unfamiliar domains;
-- identifying business capability vs entity/table vs workflow;
-- defining one-sentence responsibility statements;
-- using business rules, language, cohesion, and reasons-to-change to justify boundaries;
-- deciding whether a boundary is only a logical/module boundary or may justify a separate service boundary;
-- deeper database-per-service tradeoffs as they appear in later distributed workflows;
-- distinguish a **trusted authenticated request context** from an arbitrary `userId` supplied by a client: Course may use an identity already established by trusted authentication logic, but must not treat raw client-provided identity data as proof of who the caller is.
+- identifying business capability vs entity/table vs workflow in unfamiliar examples;
+- concise one-sentence responsibility statements;
+- deeper database-per-service tradeoffs as distributed workflows become more complex;
+- preserving the distinction between trusted authenticated request context and arbitrary client-supplied identity data;
+- continuing to use precise terminology: asynchronous communication may later converge to consistent state, but does not thereby become synchronous.
 
-These are reinforcement areas, not blockers for the next curriculum section.
+These are reinforcement areas, not blockers for the next curriculum concept.
 
 ## Misconceptions / Weak Areas
 
-- bounded-context grouping was initially easier than explaining why a responsibility belongs in one context and not another; this improved through repeated exercises using business question, source of truth, business rules, and reason-to-change reasoning.
+- bounded-context grouping was initially easier than explaining why a responsibility belongs in one context and not another; this improved through repeated exercises using business question, source of truth, business rules, and reason-to-change reasoning;
+- briefly described eventual convergence as becoming "sync"; corrected and demonstrated that eventual consistency does not mean asynchronous communication becomes synchronous;
+- initially treated "request came from Gateway" as sufficient to trust caller identity; corrected to the stronger rule that trusted authentication logic must first establish the identity.
 
 ## Resolved Misconceptions
 
-- clarified that a monolith does not automatically mean one failure always breaks every capability;
-- clarified that microservices do not automatically guarantee failure isolation;
-- clarified that Course content ownership is distinct from learner progress ownership;
-- clarified that current course price metadata and historical amount actually charged are different business truths owned by different contexts;
-- demonstrated that another service needing data does not make it a co-owner of that data;
-- clarified that business-rule ownership should be reasoned from the owning business capability, not merely from which service happens to store a related row;
-- clarified that Course may consume an already-authenticated identity from trusted request context, but must not own password verification or trust a raw client-provided user ID as authentication proof.
+- a monolith does not automatically mean one failure always breaks every capability;
+- microservices do not automatically guarantee failure isolation;
+- Course content ownership is distinct from learner progress ownership;
+- current course price and historical amount actually charged are different business truths;
+- another service needing data does not make it a co-owner of that data;
+- one registration form does not imply one backend owner;
+- User Service should not automatically duplicate Auth's authoritative login email;
+- a raw `userId` supplied by the client is not authentication proof;
+- Search lag after Course publication means stale derived state, not failed publication;
+- eventual Search catch-up does not make the communication synchronous.
 
 ## Completed Understanding Checks
 
 - identified one NestJS application with multiple modules as a monolith;
 - identified Enrollment as the owner of enrollment-state changes;
 - explained why Payment directly changing Enrollment data creates tight coupling;
-- identified shared-database coupling and request-chain coupling in a nominal microservice setup;
-- chose to preserve enrollment success when notification delivery fails and justified the business reason;
-- explained why a payment timeout is an ambiguous outcome and why blind retry can double-charge;
-- grouped Course creation/lesson/publishing responsibilities separately from Payment;
-- separated Auth credential/security responsibilities from Profile responsibilities;
-- separated Enrollment entitlement from Learning Progress;
-- correctly separated Course (publish/manage), Payment (purchase/refund), and Enrollment (grant/revoke access);
-- for 0.9, correctly assigned current Course price to Course, actual historical charged amount to Payment, and current access entitlement to Enrollment;
-- explained that Payment should use an explicit service contract rather than directly SELECT from Enrollment's private database, citing ownership and schema-coupling consequences;
-- identified a contract that exposed entire Course/Payment internal rows as over-coupled and recognized leaked business-rule interpretation;
-- designed smaller business-oriented contracts and explained why internal database-column changes should not affect consumers;
-- correctly reasoned that Payment should not directly revoke Enrollment-owned access after a refund;
-- identified Enrollment -> Course as synchronous when Enrollment cannot answer until Course replies;
-- explained that if Course becomes slow, Enrollment and therefore the student's overall request become slower because the dependency's latency contributes to end-to-end latency;
-- correctly kept Lesson completion successful even when achievement-email delivery is unavailable, because Learning Progress owns the core state change;
-- explained that a durable messaging mechanism can retain work while a downstream receiver is unavailable and allow the sender to continue;
-- distinguished synchronous waiting from asynchronous sender/receiver decoupling;
-- correctly reasoned that Course publication can succeed while Search is down when the business tolerates delayed discoverability;
-- identified the temporary disagreement between Course state and Search state as eventual consistency and explained that Search later catches up;
-- identified payment-success/enrollment-pending as eventual consistency with higher business impact because a learner may have paid without receiving access;
-- proposed an explicit pending-access user experience after payment rather than pretending the full purchase workflow has already completed;
-- completed the 0.13 final reasoning check: kept Payment success separate from Enrollment completion, chose an honest pending-access UI state, described later Enrollment recovery, and identified compensation/refund for an unrecoverable enrollment failure;
-- completed the first 0.14 HLD request-flow check: Browser -> API Gateway -> Course Service; identified Course Service as the authoritative owner of current course information; and correctly justified the interaction as synchronous because the browser must wait for the course data needed for the current page;
-- completed the 0.14 API Gateway concept check: explained frontend-to-internal-service coupling, correctly defined Gateway routing vs Course-owned response logic, rejected Course publishing rules inside the Gateway, and correctly predicted that a Gateway outage can block browser access to otherwise healthy downstream services;
-- completed the 0.14 Auth Service concept check: kept password/authentication concerns in Auth, profile information in User, explained the inconsistency/coupling created by duplicated authentication rules, and rejected using a single registration screen as evidence that one service must own all registration data.
+- identified shared-database coupling and synchronous request-chain coupling;
+- chose to preserve core business success when a non-critical notification fails;
+- explained why a timeout is an ambiguous remote outcome and why blind retry may duplicate a charge;
+- separated Course, Payment, Enrollment, Auth/Profile, and Learning Progress business truths;
+- assigned current Course price to Course, actual charged amount to Payment, and current access entitlement to Enrollment;
+- explained why services should use explicit contracts instead of directly querying another service's database;
+- identified Enrollment -> Course as synchronous when Enrollment cannot complete without Course's answer;
+- explained durable asynchronous messaging and temporal-coupling reduction;
+- explained eventual consistency using Course -> Search;
+- compared low-impact Search lag with higher-impact payment-success/enrollment-pending;
+- completed the 0.13 sync-vs-async reasoning check including recovery/compensation thinking;
+- completed the 0.14 Browser -> API Gateway -> Course request-path check;
+- completed the API Gateway HLD concept check;
+- completed the Auth Service HLD concept check;
+- completed the User/Profile Service HLD concept check, including duplicate-email ownership and trusted-identity corrections;
+- completed the Course Service HLD concept check, including current-price vs historical-payment ownership, service-field ownership, and Course-authoritative/Search-stale reasoning.
 
 ## Assignment History
 
@@ -149,55 +135,69 @@ No active milestone assignment yet.
 
 Sections **0.1 through 0.13 are complete as curriculum sections**.
 
-The learner demonstrated the core 0.9 ownership rule and the reason database privacy matters for independent service evolution. The learner also demonstrated the core 0.10 contract principle: consumers should depend on explicit, stable business semantics rather than another service's storage model or internal status codes. In 0.11, the learner correctly identified synchronous request dependency and explained how dependency latency affects the caller's end-to-end request latency. In 0.12, the learner correctly explained asynchronous sender/receiver decoupling, durable messaging, temporal coupling reduction, eventual consistency, authoritative-vs-derived state, and the difference in business impact between delayed Search indexing and delayed Enrollment after payment. In 0.13, the learner correctly applied a six-part sync-vs-async decision framework covering immediate business dependency, acceptable inconsistency windows, failure coupling, latency coupling, honest intermediate UX states, and recovery/compensation requirements.
-
 Section **0.14 — First Collaborative Learning Platform HLD is IN PROGRESS**.
 
 Completed and demonstrated inside 0.14 so far:
 
-1. first Browser -> API Gateway -> Course Service request path and why that page-load interaction is synchronous;
-2. API Gateway as the controlled public entry point, request routing, frontend/internal-architecture decoupling, keeping service-owned business logic out of the Gateway, and the Gateway's availability tradeoff;
-3. Auth Service ownership: identity vs authentication at the current HLD level, centralized authentication responsibility, Auth-vs-User/Profile separation, and why workflow/screen shape does not define service ownership.
+1. Browser -> API Gateway -> Course Service request path and why that interaction is synchronous;
+2. API Gateway responsibility and availability tradeoff;
+3. Auth Service responsibility and Auth-vs-User/Profile boundary;
+4. User Service / Profile responsibility, including authoritative ownership and trusted caller identity;
+5. Course Service responsibility, including course-management ownership, current price vs historical payment, separation from Enrollment/Progress/Payment, and Course-authoritative/Search-derived eventual consistency.
 
-The learner's Auth answer used "get it from the request object" as shorthand for obtaining caller identity. Preserve the important qualification in future teaching: this is valid only when trusted authentication logic has already established the identity and placed it into trusted request context; raw client-provided identity is not proof.
+No implementation work has been performed.
+
+Do **not** assume JWT, access tokens, refresh tokens, OAuth/OIDC, or authorization have been taught. They remain intentionally deferred.
 
 ## Teaching Approach Requirement
 
-For architecture/design topics, continue showing the reasoning path explicitly: raw problem -> actors/actions -> business question -> rules/data -> consistency needs -> authoritative owner -> alternatives -> boundary choice -> named context/service -> transfer to a new example.
+For architecture/design topics, continue showing the reasoning path explicitly:
+
+```text
+raw problem -> actors/actions -> business question -> rules/data -> consistency needs -> authoritative owner -> alternatives -> boundary choice -> named context/service -> transfer to a new example
+```
 
 ### Learner-specific depth-first teaching rules — HARD REQUIREMENT
 
-These rules apply to every remaining milestone and every technology/concept taught in this project:
-
 1. Teach **one concept at a time**. Do not introduce the next concept until the learner has answered the understanding questions and explicitly says `next`.
-2. Prefer **in-depth teaching over high-level coverage**. A high-level sentence may be used only as orientation; it must never replace the detailed explanation needed to understand the concept.
-3. Do not skip an important detail because it appears obvious, basic, or implied. The learner is studying the stack from scratch.
-4. Before using a technical word that has not already been taught, explain that word in simple English first. Examples include terms such as entitlement, boundary, edge, backbone, routing, source of truth, idempotency, worker, queue, and similar vocabulary.
+2. Prefer **in-depth teaching over high-level coverage**.
+3. Do not skip details because they appear obvious, basic, or implied.
+4. Explain unfamiliar technical words in simple English before using them as prerequisites.
 5. For each concept, teach in this structure:
-   - **The problem** — what goes wrong or becomes difficult without the concept;
-   - **The solution** — what the concept is and exactly what it does;
+   - **The problem**;
+   - **The solution**;
    - **Simple real-life example / analogy**;
    - **What goes wrong if we do it the other way**;
    - **Key points for notes**;
    - **One-line summary**.
-6. Use short sentences and simple English, but do not reduce technical depth.
-7. Explain **why** each design or implementation choice exists, not only what it is.
-8. When connecting to an earlier concept, give a one-line reminder instead of assuming the learner remembers it.
-9. Where relevant, continue past the definition into runtime behavior, failure behavior, alternatives, tradeoffs, production implications, and how the concept applies to this Collaborative Learning Platform.
-10. End each concept with a few understanding questions. Wait for the learner's answer before continuing.
-11. If the learner's answer reveals a gap, re-explain that exact gap before moving on.
-12. Do not use response length as a reason to compress multiple concepts together. A concept may span several messages if needed.
-13. Never treat a broad architecture diagram or summary as proof that the underlying components are understood. Explain each important box, arrow, dependency, and technical term separately before relying on it.
+6. Use short sentences and simple English without reducing technical depth.
+7. Explain **why** each design/implementation choice exists.
+8. When connecting to an earlier concept, give a one-line reminder.
+9. Where relevant, include runtime behavior, failure behavior, alternatives, tradeoffs, production implications, and project application.
+10. End each concept with a few understanding questions and wait for the learner's answer.
+11. If an answer reveals a gap, re-explain that exact gap before moving on.
+12. Do not compress multiple concepts merely to shorten a response.
+13. Never treat a broad architecture diagram as proof that each component is understood.
 
 **Depth-over-breadth rule:** when forced to choose between covering more topics quickly and teaching the current concept thoroughly, choose thorough understanding of the current concept.
 
 ## Next Teaching Step
 
-**Section 0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS.** API Gateway and Auth Service have now passed their concept checks.
+**Section 0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS.**
 
-**Exact next teaching step for the next chat:** teach **User Service / Profile responsibility in the HLD** as one concept only. Start from the problem of mixing profile data with authentication data, remind the learner in one line that Auth owns authentication/security concerns, then derive what User Service owns and does not own. Explain the boundary in depth, include realistic failure/ownership examples, end with understanding questions, and wait for the learner to answer and say `next` before moving to another HLD component.
+**Exact next teaching step for the next chat:** teach **Enrollment Service responsibility in the HLD** as one concept only.
 
-Do **not** assume JWT, access tokens, refresh tokens, OAuth/OIDC, or authorization have been taught. They were intentionally deferred and should not be used as unexplained prerequisites.
+Start from the problem of confusing three different business facts:
+
+```text
+what the course is             -> Course
+what happened financially      -> Payment
+whether this learner has access -> Enrollment
+```
+
+Before using the term **entitlement** as shorthand, explain it simply as "the learner's current right/access to a course." Derive what Enrollment owns and does not own, show why Payment success does not make Payment the owner of access state, include realistic failure/ownership examples, and end with understanding questions.
+
+Do not introduce Learning Progress or another HLD component until the learner answers and explicitly says `next`.
 
 ## Session Update Rule
 
