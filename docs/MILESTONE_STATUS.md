@@ -75,6 +75,17 @@ Verified 0.14 concepts so far:
    - Search may hold a derived searchable representation but Course remains authoritative;
    - when Course is published but Search has not indexed it yet, the course is published and Search is temporarily stale;
    - Search catching up later is eventual consistency and does not make the communication synchronous.
+6. **Enrollment Service responsibility**
+   - Enrollment owns the learner-course relationship and the learner's current right/access to a course;
+   - Payment success may trigger enrollment work but does not make Payment the owner of access state;
+   - access can exist without a payment, such as free or manually granted access;
+   - Payment must not directly write Enrollment-owned data because that breaks data ownership and creates schema/business coupling.
+7. **Learning Progress Service responsibility**
+   - Learning Progress owns lesson completion, course-completion percentage, checkpoints, and learner progress history;
+   - Enrollment answers whether a learner may access a course, while Learning Progress answers what the learner has completed;
+   - an active enrollment with 0% progress is valid;
+   - revoking enrollment does not inherently erase historical progress;
+   - Course remains the owner of course structure such as modules and lessons.
 
 Previously established architecture foundations remain valid:
 
@@ -94,8 +105,8 @@ Previously established architecture foundations remain valid:
 Continue the established Milestone 0 lesson sequence exactly:
 
 - finish **0.14 — First Collaborative Learning Platform HLD** one HLD concept at a time under the depth-first teaching rule;
-  - next: Enrollment Service responsibility;
-  - then continue remaining major HLD components one at a time, including Learning Progress, Payment, Notification, File, Search, Chat, and AI/RAG responsibilities and the important arrows/dependencies between them;
+  - next: Payment Service responsibility;
+  - then continue remaining major HLD components one at a time, including Notification, File, Search, Chat, and AI/RAG responsibilities and the important arrows/dependencies between them;
 - 0.15 — Service responsibility map;
 - 0.16 — First Architecture Decision Records;
 - 0.17 — Failure and operational thinking;
@@ -140,7 +151,13 @@ The learner has correctly reasoned that:
 - User Service may rely on identity only after trusted authentication logic establishes it;
 - Course Service owns course structure and publishing, not enrollment, learner progress, or payment state;
 - Search is a derived model and may be temporarily stale after Course publishes;
-- asynchronous Course -> Search processing can recover later without turning the interaction into a synchronous dependency.
+- asynchronous Course -> Search processing can recover later without turning the interaction into a synchronous dependency;
+- Payment success and Enrollment access are related facts but remain separately owned;
+- free access demonstrates that Enrollment cannot be modeled as merely a Payment sub-state;
+- Payment directly writing Enrollment's database would create ownership/schema coupling;
+- Enrollment can be active while Learning Progress is 0%;
+- Enrollment revocation and historical learning progress are separate facts;
+- Course owns modules/lessons while Learning Progress owns a learner's completion of those lessons.
 
 Important clarification to preserve: when a downstream service reads caller identity from request context, that identity must already have been established by trusted authentication logic. A raw client-supplied `userId` is not proof of identity.
 
@@ -165,7 +182,7 @@ Sections **0.1 through 0.13 are complete as curriculum sections**.
 
 Section **0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS**.
 
-The latest completed concept is **Course Service responsibility in the HLD**. User/Profile and Course Service concept checks have both passed.
+The latest completed concept is **Learning Progress Service responsibility in the HLD**. Enrollment Service and Learning Progress Service concept checks have both passed.
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
@@ -175,7 +192,7 @@ No code/infrastructure action yet.
 
 Continue **0.14 — First Collaborative Learning Platform HLD** under the learner-specific depth-first rule.
 
-**Exact next teaching concept:** **Enrollment Service responsibility in the HLD**. Start from the problem of confusing course definition, payment outcome, and learner access. Derive what Enrollment owns and does not own, explain access entitlement in simple language before using it as shorthand, include realistic ownership/failure examples, then stop for an understanding check. Do not introduce the next HLD component until the learner answers and explicitly says `next`.
+**Exact next teaching concept:** **Payment Service responsibility in the HLD**. Start from the problem of distinguishing current product/course configuration, historical financial facts, payment-provider outcomes, and learner access. Derive what Payment owns and does not own, include realistic success/failure/refund examples at HLD level without jumping ahead into the later payment implementation milestone, then stop for an understanding check. Do not introduce the next HLD component until the learner answers and explicitly says `next`.
 
 Do not start application coding before the Milestone 0 assignment has been evaluated.
 
