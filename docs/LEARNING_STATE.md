@@ -52,8 +52,15 @@ The learner has demonstrated understanding of:
 - downstream services may rely on caller identity only after trusted authentication logic has established it;
 - Course Service owns course-management truth: course definition, modules, lessons, publishing state, instructor ownership, current course metadata, and current configured price;
 - Payment owns historical amount actually charged, even when the current course price later changes;
-- Enrollment owns enrollment/access state;
-- Learning Progress owns learner completion/progress state;
+- Enrollment owns the learner-course relationship and current access entitlement/right to a course;
+- Payment success may cause enrollment work without making Payment the owner of access state;
+- access can exist without a payment, so Enrollment is not merely a Payment sub-state;
+- Payment must not directly write Enrollment-owned data because that breaks data ownership and creates schema/business coupling;
+- Learning Progress owns learner completion/progress state, including lesson completion and course-completion percentage;
+- Enrollment and Learning Progress answer different questions: whether a learner may access a course vs what the learner has completed;
+- an active enrollment with 0% progress is a valid state;
+- revoking access does not inherently erase historical progress;
+- Course remains the owner of course structure such as modules and lessons, while Learning Progress owns a learner's completion of those lessons;
 - Search can contain a derived searchable representation while Course remains the authoritative owner;
 - if Course is published while Search is stale, the course is still published but temporarily not searchable;
 - Search catching up later is eventual consistency, not a switch from asynchronous to synchronous communication.
@@ -94,7 +101,8 @@ These are reinforcement areas, not blockers for the next curriculum concept.
 - User Service should not automatically duplicate Auth's authoritative login email;
 - a raw `userId` supplied by the client is not authentication proof;
 - Search lag after Course publication means stale derived state, not failed publication;
-- eventual Search catch-up does not make the communication synchronous.
+- eventual Search catch-up does not make the communication synchronous;
+- briefly assigned course lessons/modules to Learning Progress during an ownership check; corrected to Course owning course structure and Learning Progress owning learner completion of that structure.
 
 ## Completed Understanding Checks
 
@@ -116,7 +124,9 @@ These are reinforcement areas, not blockers for the next curriculum concept.
 - completed the API Gateway HLD concept check;
 - completed the Auth Service HLD concept check;
 - completed the User/Profile Service HLD concept check, including duplicate-email ownership and trusted-identity corrections;
-- completed the Course Service HLD concept check, including current-price vs historical-payment ownership, service-field ownership, and Course-authoritative/Search-stale reasoning.
+- completed the Course Service HLD concept check, including current-price vs historical-payment ownership, service-field ownership, and Course-authoritative/Search-stale reasoning;
+- completed the Enrollment Service HLD concept check, including access-entitlement ownership, free-access reasoning, and why Payment must not mutate Enrollment's database;
+- completed the Learning Progress Service HLD concept check, including active-enrollment/0%-progress reasoning, revoked-access/history separation, and ownership of Course vs Enrollment vs Progress vs Payment facts.
 
 ## Assignment History
 
@@ -143,7 +153,9 @@ Completed and demonstrated inside 0.14 so far:
 2. API Gateway responsibility and availability tradeoff;
 3. Auth Service responsibility and Auth-vs-User/Profile boundary;
 4. User Service / Profile responsibility, including authoritative ownership and trusted caller identity;
-5. Course Service responsibility, including course-management ownership, current price vs historical payment, separation from Enrollment/Progress/Payment, and Course-authoritative/Search-derived eventual consistency.
+5. Course Service responsibility, including course-management ownership, current price vs historical payment, separation from Enrollment/Progress/Payment, and Course-authoritative/Search-derived eventual consistency;
+6. Enrollment Service responsibility, including access-entitlement ownership, free access without Payment, and why Payment may trigger but must not own or directly mutate Enrollment state;
+7. Learning Progress Service responsibility, including lesson/course completion ownership, separation from Enrollment access state, valid active+0% state, and preservation of historical progress when access is revoked.
 
 No implementation work has been performed.
 
@@ -185,19 +197,20 @@ raw problem -> actors/actions -> business question -> rules/data -> consistency 
 
 **Section 0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS.**
 
-**Exact next teaching step for the next chat:** teach **Enrollment Service responsibility in the HLD** as one concept only.
+**Exact next teaching step for the next chat:** teach **Payment Service responsibility in the HLD** as one concept only.
 
-Start from the problem of confusing three different business facts:
+Start from the problem of distinguishing these business truths:
 
 ```text
-what the course is             -> Course
-what happened financially      -> Payment
-whether this learner has access -> Enrollment
+what the course currently costs/configures -> Course
+what happened financially                  -> Payment
+whether the learner currently has access   -> Enrollment
+what the learner has completed             -> Learning Progress
 ```
 
-Before using the term **entitlement** as shorthand, explain it simply as "the learner's current right/access to a course." Derive what Enrollment owns and does not own, show why Payment success does not make Payment the owner of access state, include realistic failure/ownership examples, and end with understanding questions.
+Derive what Payment owns and does not own. Cover payment outcome/history at HLD level, why the historically charged amount remains a Payment fact even if the Course price later changes, why successful payment does not itself make Payment the owner of access, and one or two realistic failure/refund ownership examples. Do not jump ahead into webhook mechanics, provider integration, idempotency implementation, sagas, ledgers, or refund-state-machine implementation; those belong to later milestones.
 
-Do not introduce Learning Progress or another HLD component until the learner answers and explicitly says `next`.
+End with understanding questions. Do not introduce Notification or another HLD component until the learner answers and explicitly says `next`.
 
 ## Session Update Rule
 
