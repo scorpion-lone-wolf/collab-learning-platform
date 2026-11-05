@@ -87,6 +87,13 @@ Verified 0.14 concepts so far:
    - revoking enrollment does not inherently erase historical progress;
    - Course remains the owner of course structure such as modules and lessons.
 
+8. **Payment Service responsibility**
+   - Payment owns the historical financial truth: actual amount charged, payment attempts/outcomes, and refund outcomes;
+   - Course owns current configured price; later price changes do not rewrite historical payments;
+   - Payment success may trigger but does not own enrollment/access changes;
+   - refund financial state is Payment-owned, while any resulting access revocation is Enrollment-owned;
+   - temporary cross-service inconsistency requires reliable coordination and recovery, not merely an assumption that an event will arrive.
+
 Previously established architecture foundations remain valid:
 
 - module boundary vs runtime/deployment boundary;
@@ -105,8 +112,8 @@ Previously established architecture foundations remain valid:
 Continue the established Milestone 0 lesson sequence exactly:
 
 - finish **0.14 — First Collaborative Learning Platform HLD** one HLD concept at a time under the depth-first teaching rule;
-  - next: Payment Service responsibility;
-  - then continue remaining major HLD components one at a time, including Notification, File, Search, Chat, and AI/RAG responsibilities and the important arrows/dependencies between them;
+  - next: Notification Service responsibility;
+  - then continue remaining major HLD components one at a time, including File, Search, Chat, and AI/RAG responsibilities and the important arrows/dependencies between them;
 - 0.15 — Service responsibility map;
 - 0.16 — First Architecture Decision Records;
 - 0.17 — Failure and operational thinking;
@@ -157,7 +164,13 @@ The learner has correctly reasoned that:
 - Payment directly writing Enrollment's database would create ownership/schema coupling;
 - Enrollment can be active while Learning Progress is 0%;
 - Enrollment revocation and historical learning progress are separate facts;
-- Course owns modules/lessons while Learning Progress owns a learner's completion of those lessons.
+- Course owns modules/lessons while Learning Progress owns a learner's completion of those lessons;
+- Course owns current pricing while Payment owns the historically charged amount, even after the instructor changes the price;
+- payment success and an enrollment not yet created are distinct service-owned facts;
+- financial refund facts belong to Payment while access revocation, if required, belongs to Enrollment;
+- direct Payment access to Enrollment's database would violate service ownership.
+
+Reinforcement for the next lessons: eventual consistency is the desired outcome, not an automatic guarantee; reliable messaging/retries/recovery will be needed to reach convergence after failures.
 
 Important clarification to preserve: when a downstream service reads caller identity from request context, that identity must already have been established by trusted authentication logic. A raw client-supplied `userId` is not proof of identity.
 
@@ -182,7 +195,7 @@ Sections **0.1 through 0.13 are complete as curriculum sections**.
 
 Section **0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS**.
 
-The latest completed concept is **Learning Progress Service responsibility in the HLD**. Enrollment Service and Learning Progress Service concept checks have both passed.
+The latest completed concept is **Payment Service responsibility in the HLD**. Enrollment Service, Learning Progress Service, and Payment Service concept checks have all passed.
 
 No implementation work has been performed, and Milestone 0 remains in progress.
 
@@ -192,7 +205,7 @@ No code/infrastructure action yet.
 
 Continue **0.14 — First Collaborative Learning Platform HLD** under the learner-specific depth-first rule.
 
-**Exact next teaching concept:** **Payment Service responsibility in the HLD**. Start from the problem of distinguishing current product/course configuration, historical financial facts, payment-provider outcomes, and learner access. Derive what Payment owns and does not own, include realistic success/failure/refund examples at HLD level without jumping ahead into the later payment implementation milestone, then stop for an understanding check. Do not introduce the next HLD component until the learner answers and explicitly says `next`.
+**Exact next teaching concept:** **Notification Service responsibility in the HLD**. Start with a learning-platform event such as course enrollment or payment completion and explain why delivery of email/push/in-app messages is a different business capability from the authoritative course, payment, or enrollment facts. Cover what Notification owns and does not own, the consequence of notification failure, and when asynchronous messaging helps at a high level. End with understanding questions. Do not introduce File or another HLD component until the learner answers and explicitly says `next`.
 
 Do not start application coding before the Milestone 0 assignment has been evaluated.
 
