@@ -57,6 +57,9 @@ The learner has demonstrated understanding of:
 - access can exist without a payment, so Enrollment is not merely a Payment sub-state;
 - Payment must not directly write Enrollment-owned data because that breaks data ownership and creates schema/business coupling;
 - Learning Progress owns learner completion/progress state, including lesson completion and course-completion percentage;
+- Payment owns actual historically charged amounts and payment/refund outcomes, whereas Course owns current course price;
+- successful financial payment may precede enrollment creation, but Payment does not own access and must not directly modify Enrollment data;
+- financial refund status and subsequent access revocation (if required) are separately owned by Payment and Enrollment;
 - Enrollment and Learning Progress answer different questions: whether a learner may access a course vs what the learner has completed;
 - an active enrollment with 0% progress is a valid state;
 - revoking access does not inherently erase historical progress;
@@ -80,7 +83,8 @@ The learner has demonstrated understanding of:
 - concise one-sentence responsibility statements;
 - deeper database-per-service tradeoffs as distributed workflows become more complex;
 - preserving the distinction between trusted authenticated request context and arbitrary client-supplied identity data;
-- continuing to use precise terminology: asynchronous communication may later converge to consistent state, but does not thereby become synchronous.
+- continuing to use precise terminology: asynchronous communication may later converge to consistent state, but does not thereby become synchronous;
+- eventual consistency requires mechanisms for reliable delivery, retry, and recovery rather than being automatic simply because services exchange events.
 
 These are reinforcement areas, not blockers for the next curriculum concept.
 
@@ -126,7 +130,8 @@ These are reinforcement areas, not blockers for the next curriculum concept.
 - completed the User/Profile Service HLD concept check, including duplicate-email ownership and trusted-identity corrections;
 - completed the Course Service HLD concept check, including current-price vs historical-payment ownership, service-field ownership, and Course-authoritative/Search-stale reasoning;
 - completed the Enrollment Service HLD concept check, including access-entitlement ownership, free-access reasoning, and why Payment must not mutate Enrollment's database;
-- completed the Learning Progress Service HLD concept check, including active-enrollment/0%-progress reasoning, revoked-access/history separation, and ownership of Course vs Enrollment vs Progress vs Payment facts.
+- completed the Learning Progress Service HLD concept check, including active-enrollment/0%-progress reasoning, revoked-access/history separation, and ownership of Course vs Enrollment vs Progress vs Payment facts;
+- completed the Payment Service HLD concept check, including historical charged amount vs current course price, payment-success/enrollment-pending separation, direct-database coupling, and refund vs access ownership.
 
 ## Assignment History
 
@@ -155,7 +160,8 @@ Completed and demonstrated inside 0.14 so far:
 4. User Service / Profile responsibility, including authoritative ownership and trusted caller identity;
 5. Course Service responsibility, including course-management ownership, current price vs historical payment, separation from Enrollment/Progress/Payment, and Course-authoritative/Search-derived eventual consistency;
 6. Enrollment Service responsibility, including access-entitlement ownership, free access without Payment, and why Payment may trigger but must not own or directly mutate Enrollment state;
-7. Learning Progress Service responsibility, including lesson/course completion ownership, separation from Enrollment access state, valid active+0% state, and preservation of historical progress when access is revoked.
+7. Learning Progress Service responsibility, including lesson/course completion ownership, separation from Enrollment access state, valid active+0% state, and preservation of historical progress when access is revoked;
+8. Payment Service responsibility, including historical payment amount, refund ownership, distinction from current configured Course price, and separate Enrollment ownership.
 
 No implementation work has been performed.
 
@@ -197,20 +203,11 @@ raw problem -> actors/actions -> business question -> rules/data -> consistency 
 
 **Section 0.14 — First Collaborative Learning Platform HLD remains IN PROGRESS.**
 
-**Exact next teaching step for the next chat:** teach **Payment Service responsibility in the HLD** as one concept only.
+**Exact next teaching step for the next chat:** teach **Notification Service responsibility in the HLD** as one concept only.
 
-Start from the problem of distinguishing these business truths:
+Begin with the need to notify a learner about a completed business action, but show that sending a message is a separate responsibility from the authoritative action itself. Explain email/in-app/push notifications simply, show what Notification owns and does not own, explain why a temporary email-delivery failure should not undo a successful payment or enrollment, and show the high-level benefit and tradeoff of asynchronous notification handling. End with understanding questions.
 
-```text
-what the course currently costs/configures -> Course
-what happened financially                  -> Payment
-whether the learner currently has access   -> Enrollment
-what the learner has completed             -> Learning Progress
-```
-
-Derive what Payment owns and does not own. Cover payment outcome/history at HLD level, why the historically charged amount remains a Payment fact even if the Course price later changes, why successful payment does not itself make Payment the owner of access, and one or two realistic failure/refund ownership examples. Do not jump ahead into webhook mechanics, provider integration, idempotency implementation, sagas, ledgers, or refund-state-machine implementation; those belong to later milestones.
-
-End with understanding questions. Do not introduce Notification or another HLD component until the learner answers and explicitly says `next`.
+Do not introduce File Service or another HLD component until the learner answers and explicitly says `next`. No application implementation yet; Milestone 0 remains in progress.
 
 ## Session Update Rule
 
